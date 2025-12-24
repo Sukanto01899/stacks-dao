@@ -1,0 +1,73 @@
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap");
+@import "tailwindcss";
+
+:root {
+  --bg: #0a0b0d;
+  --panel: #13151a;
+  --ink: #f8f7f4;
+  --muted: #9ca3af;
+  --accent: #f97316;
+  --accent-soft: #ffb55a;
+  --outline: rgba(255, 255, 255, 0.1);
+}
+
+@theme inline {
+  --color-background: var(--bg);
+  --color-foreground: var(--ink);
+  --font-sans: "Space Grotesk", ui-sans-serif, system-ui;
+  --font-serif: "Fraunces", ui-serif, Georgia;
+}
+
+body {
+  background: radial-gradient(circle at top, #1a1c23 0%, #0a0b0d 45%, #07080a 100%);
+  color: var(--ink);
+  font-family: "Space Grotesk", ui-sans-serif, system-ui;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+::selection {
+  background: rgba(249, 115, 22, 0.3);
+}
+
+.glass-panel {
+  background: linear-gradient(135deg, rgba(19, 21, 26, 0.95), rgba(12, 14, 18, 0.75));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(20px);
+}
+
+.glow-ring {
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12), 0 0 30px rgba(249, 115, 22, 0.3);
+}
+
+@keyframes floatY {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-float {
+  animation: floatY 8s ease-in-out infinite;
+}
+
+.animate-fade {
+  animation: fadeUp 0.7s ease both;
+}
