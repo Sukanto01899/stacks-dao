@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useAppKit } from "@reown/appkit/react";
 import { useWallet } from "./wallet-provider";
 
-const appKitEnabled = Boolean(process.env.NEXT_PUBLIC_REOWN_PROJECT_ID);
+const walletConnectEnabled = Boolean(
+  process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID
+);
 
 function StacksOnlyButton() {
-  const { handleConnect, connecting, address } = useWallet();
+  const { handleConnect, handleDisconnect, connecting, address } = useWallet();
 
   const short = address
     ? `${address.slice(0, 6)}...${address.slice(-4)}`
@@ -18,21 +19,37 @@ function StacksOnlyButton() {
   };
 
   return (
-    <button
-      type="button"
-      onClick={() => void onStacksConnect()}
-      disabled={connecting}
-      className="rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.25em] text-white transition hover:border-white/40 hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-60"
-    >
-      {connecting ? "Connecting..." : short ? `Connected ${short}` : "Connect"}
-    </button>
+    <div className="flex items-center gap-2">
+      <button
+        type="button"
+        onClick={() => void onStacksConnect()}
+        disabled={connecting}
+        className="rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.25em] text-white transition hover:border-white/40 hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-60"
+      >
+        {connecting ? "Connecting..." : short ? `Connected ${short}` : "Connect"}
+      </button>
+      {short ? (
+        <button
+          type="button"
+          onClick={handleDisconnect}
+          className="rounded-full border border-white/10 px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.25em] text-white/70 transition hover:border-white/30 hover:text-white"
+        >
+          Disconnect
+        </button>
+      ) : null}
+    </div>
   );
 }
 
-function WalletMenuWithReown() {
-  const { handleConnect, connecting, address } = useWallet();
+function WalletMenu() {
+  const {
+    handleConnect,
+    handleWalletConnect,
+    handleDisconnect,
+    connecting,
+    address,
+  } = useWallet();
   const [open, setOpen] = useState(false);
-  const { open: openAppKit } = useAppKit();
   const menuRef = useRef<HTMLDivElement | null>(null);
 
   const short = address
@@ -42,11 +59,6 @@ function WalletMenuWithReown() {
   const onStacksConnect = async () => {
     setOpen(false);
     await handleConnect();
-  };
-
-  const onReownConnect = () => {
-    setOpen(false);
-    void openAppKit({ view: "Connect" });
   };
 
   useEffect(() => {
@@ -72,21 +84,37 @@ function WalletMenuWithReown() {
       </button>
       {open ? (
         <div className="absolute right-0 mt-3 w-48 rounded-2xl border border-white/10 bg-[#12151b] p-2 text-xs text-white/80 shadow-xl">
-          <button
-            type="button"
-            onClick={onReownConnect}
-            className="w-full rounded-xl px-3 py-2 text-left transition hover:bg-white/10"
-          >
-            Reown AppKit
-          </button>
-          <button
-            type="button"
-            onClick={() => void onStacksConnect()}
-            className="mt-1 w-full rounded-xl px-3 py-2 text-left transition hover:bg-white/10"
-            disabled={connecting}
-          >
-            Stacks Connect
-          </button>
+          {short ? (
+            <button
+              type="button"
+              onClick={() => {
+                setOpen(false);
+                handleDisconnect();
+              }}
+              className="w-full rounded-xl px-3 py-2 text-left transition hover:bg-white/10"
+            >
+              Disconnect
+            </button>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={() => void onStacksConnect()}
+                className="w-full rounded-xl px-3 py-2 text-left transition hover:bg-white/10"
+                disabled={connecting}
+              >
+                Stacks Connect
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleWalletConnect()}
+                className="mt-1 w-full rounded-xl px-3 py-2 text-left transition hover:bg-white/10"
+                disabled={connecting || !walletConnectEnabled}
+              >
+                WalletConnect (Stacks)
+              </button>
+            </>
+          )}
         </div>
       ) : null}
     </div>
@@ -94,8 +122,8 @@ function WalletMenuWithReown() {
 }
 
 export function WalletConnectMenu() {
-  if (!appKitEnabled) {
+  if (!walletConnectEnabled) {
     return <StacksOnlyButton />;
   }
-  return <WalletMenuWithReown />;
+  return <WalletMenu />;
 }

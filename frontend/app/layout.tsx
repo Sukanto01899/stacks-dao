@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { AppProviders } from "@/components/app-providers";
 import { SiteHeader } from "@/components/site-header";
+import { WalletConnectQrModal } from "@/components/walletconnect-qr-modal";
 
 export const metadata: Metadata = {
   title: "Stacks DAO",
@@ -18,6 +19,7 @@ export default function RootLayout({
       <body className="antialiased bg-[#0b0d10] text-white">
         <AppProviders>
           <SiteHeader />
+          <WalletConnectQrModal />
           {children}
         </AppProviders>
       </body>

@@ -1,11 +1,11 @@
 # Stacks DAO
 
-Stacks DAO is a lightweight governance app for proposing and voting on treasury transfers directly on the Stacks blockchain. It ships with a modern Next.js UI, Stacks Connect/Reown wallet support, and a simple on-chain contract that tracks proposals and vote totals on testnet.
+Stacks DAO is a lightweight governance app for proposing and voting on treasury transfers directly on the Stacks blockchain. It ships with a modern Next.js UI, Stacks Connect + WalletConnect SDK support, and a simple on-chain contract that tracks proposals and vote totals on mainnet.
 
 ## Tech stack
 - Contracts: Clarity (`contracts/`)
 - Frontend: Next.js (App Router), React 19, Tailwind CSS v4 (`frontend/`)
-- Wallets: Stacks Connect + Reown AppKit (optional)
+- Wallets: Stacks Connect + WalletConnect SDK (Stacks)
 - Network SDKs: `@stacks/network`, `@stacks/transactions`, `@stacks/connect`
 - Data: Hiro API (testnet/mainnet)
 
@@ -31,11 +31,11 @@ cd frontend && npm install
 
 2) Create `frontend/.env.local`
 ```bash
-NEXT_PUBLIC_STACKS_NETWORK=testnet
+NEXT_PUBLIC_STACKS_NETWORK=mainnet
 NEXT_PUBLIC_APP_URL="http://localhost:3000"
-NEXT_PUBLIC_DAO_CONTRACT="ST1G4ZDXED8XM2XJ4Q4GJ7F4PG4EJQ1KKXVPSAX13.dao-core-v1"
-# Optional: enable Reown AppKit wallet modal
-NEXT_PUBLIC_REOWN_PROJECT_ID="your-project-id"
+NEXT_PUBLIC_DAO_CONTRACT="SP1G4ZDXED8XM2XJ4Q4GJ7F4PG4EJQ1K.dao-core-v1"
+# Optional: enable WalletConnect SDK (Stacks)
+NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID="your-project-id"
 ```
 
 3) Run the app
@@ -47,14 +47,14 @@ npm run dev
 Open `http://localhost:3000`.
 
 ## Using the app
-- Use the header “Connect wallet” button to choose:
-  - Reown AppKit (if `NEXT_PUBLIC_REOWN_PROJECT_ID` is set)
-  - Stacks Connect
+- Use the header "Connect wallet" button to choose:
+  - Stacks Connect (Leather/Xverse)
+  - WalletConnect SDK (Stacks)
 - Create proposals from `/create-proposal`.
 - Vote from `/vote` or the homepage proposal list.
 
-## Testnet contract
-- DAO contract: `ST1G4ZDXED8XM2XJ4Q4GJ7F4PG4EJQ1KKXVPSAX13.dao-core-v1`
+## Mainnet contract
+- DAO contract: `SP1G4ZDXED8XM2XJ4Q4GJ7F4PG4EJQ1K.dao-core-v1`
 
 ## Notes
 - Proposal ids are sequential (`next-proposal-id`).

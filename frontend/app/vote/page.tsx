@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { request } from "@stacks/connect";
 import { Cl } from "@stacks/transactions";
 import { useWallet } from "@/components/wallet-provider";
 import { networkName } from "@/lib/network";
@@ -20,8 +19,8 @@ const choiceMap = {
   against: 0n,
 } as const;
 
-export default function VotePage() {
-  const { address } = useWallet();
+function VotePageContent() {
+  const { address, callContract } = useWallet();
   const searchParams = useSearchParams();
   const [proposalId, setProposalId] = useState("");
   const [proposals, setProposals] = useState<
@@ -93,7 +92,7 @@ export default function VotePage() {
 
     setSubmitting(true);
     try {
-      const response = await request("stx_callContract", {
+      const response = await callContract({
         contract: daoContractId,
         functionName: "cast-vote",
         functionArgs: [Cl.uint(id), Cl.uint(choiceMap[choice])],
@@ -256,5 +255,23 @@ export default function VotePage() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function VotePage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="relative min-h-screen overflow-hidden px-6 py-16 text-white">
+          <div className="mx-auto flex max-w-3xl flex-col gap-8">
+            <div className="glass-panel rounded-3xl p-8">
+              <p className="text-sm text-white/60">Loading vote page...</p>
+            </div>
+          </div>
+        </main>
+      }
+    >
+      <VotePageContent />
+    </Suspense>
   );
 }

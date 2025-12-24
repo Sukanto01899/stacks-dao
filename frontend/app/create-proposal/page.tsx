@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { request } from "@stacks/connect";
 import { Cl } from "@stacks/transactions";
 import { useWallet } from "@/components/wallet-provider";
 import { networkName } from "@/lib/network";
@@ -15,7 +14,7 @@ import {
 } from "@/lib/dao";
 
 export default function CreateProposalPage() {
-  const { address } = useWallet();
+  const { address, callContract } = useWallet();
   const [recipient, setRecipient] = useState("");
   const [amount, setAmount] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -51,7 +50,7 @@ export default function CreateProposalPage() {
 
     setSubmitting(true);
     try {
-      const response = await request("stx_callContract", {
+      const response = await callContract({
         contract: daoContractId,
         functionName: "propose",
         functionArgs: [recipientPrincipal, Cl.uint(microAmount)],

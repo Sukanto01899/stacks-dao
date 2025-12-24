@@ -4,6 +4,7 @@ import {
   cvToValue,
   deserializeCV,
   serializeCV,
+  type ClarityValue,
 } from "@stacks/transactions";
 import { daoContractId, getDaoContractParts } from "./dao";
 import { isTestnet } from "./network";
@@ -28,7 +29,7 @@ const apiBase = isTestnet
 
 const unwrapOptional = (value: unknown) => {
   if (!value || typeof value !== "object") return null;
-  const cv = value as { type: number; value?: unknown };
+  const cv = value as { type?: ClarityType; value?: unknown };
   if (cv.type === ClarityType.OptionalNone) return null;
   if (cv.type === ClarityType.OptionalSome) return cv.value ?? null;
   return value;
@@ -112,7 +113,10 @@ const getProposalById = async (
   const cv = deserializeCV(json.data);
   const unwrapped = unwrapOptional(cv);
   if (!unwrapped) return null;
-  const tupleJson = cvToValue(unwrapped, true) as Record<string, unknown>;
+  const tupleJson = cvToValue(
+    unwrapped as ClarityValue,
+    true
+  ) as Record<string, unknown>;
   const tuple = Object.fromEntries(
     Object.entries(tupleJson).map(([key, value]) => [
       key,
