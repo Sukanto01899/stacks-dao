@@ -8,7 +8,26 @@
 (define-constant ERR_TRANSFER_FAILED u105)
 (define-constant ERR_INSUFFICIENT_POWER u106)
 (define-constant ERR_AS_CONTRACT u107)
+;; Events
+(define-data-var last-event (optional {
+    event-type: (string-ascii 50),
+    data: { 
+        proposal-id: uint,
+        proposer: principal,
+        recipient: principal,
+        amount: uint,
+        voter: principal,
+        choice: uint,
+        weight: uint
+    }
+}) none)
 
+;; Event constants
+(define-constant EVENT_PROPOSAL_CREATED (string-ascii "proposal-created"))
+(define-constant EVENT_VOTE_CAST (string-ascii "vote-cast"))
+(define-constant EVENT_PROPOSAL_EXECUTED (string-ascii "proposal-executed"))
+(define-constant EVENT_QUORUM_REACHED (string-ascii "quorum-reached"))
+(define-constant EVENT_PROPOSAL_FAILED (string-ascii "proposal-failed"))
 (define-constant CHOICE_AGAINST u0)
 (define-constant CHOICE_FOR u1)
 
@@ -91,6 +110,20 @@
           executed: false,
         })
         (var-set next-proposal-id (+ pid u1))
+        ;; Add event
+        (var-set last-event (some {
+            event-type: EVENT_PROPOSAL_CREATED,
+            data: {
+                proposal-id: pid,
+                proposer: tx-sender,
+                recipient: recipient,
+                amount: amount,
+                voter: tx-sender,
+                choice: u0,
+                weight: u0
+            }
+        }))
+        (print {event: "proposal-created", id: pid, proposer: tx-sender, recipient: recipient, amount: amount})
         (ok pid)
       )
     )
@@ -141,6 +174,17 @@
             against-votes: (+ (get against-votes proposal) against-delta),
             executed: (get executed proposal),
           })
+ ;; Add event
+          (var-set last-event (some {
+              event-type: EVENT_VOTE_CAST,
+              data: {
+                  proposal-id: proposal-id,
+                  proposer: (get proposer proposal),
+                  recipient: (get recipient proposal),
+                  amount: (get amount proposal),
+                  voter: tx-sender,
+                  choice: choice,
+                  weight: weight
           (ok true)
         )
       )
@@ -171,6 +215,21 @@
                 against-votes: (get against-votes proposal),
                 executed: true,
               })
+   ;; Add event for successful execution
+              (var-set last-event (some {
+                  event-type: EVENT_PROPOSAL_EXECUTED,
+                  data: {
+                      proposal-id: proposal-id,
+                      proposer: (get proposer proposal),
+                      recipient: (get recipient proposal),
+                      amount: (get amount proposal),
+                      voter: tx-sender,
+                      choice: u0,
+                      weight: u0
+                  }
+              }))
+              (print {event: "proposal-executed", id: proposal-id, recipient: (get recipient proposal), amount: (get amount proposal)})
+              
               (ok ok-result)
             )
             err-code (err ERR_TRANSFER_FAILED)
