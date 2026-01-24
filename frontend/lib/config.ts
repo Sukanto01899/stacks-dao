@@ -1,10 +1,10 @@
 export const appConfig = {
-  stacksNetwork: "testnet",
+  stacksNetwork: "mainnet",
   appUrl: "http://localhost:3000",
   walletConnectProjectId: "5a6379b96226b5ab0e93570d0093df16",
   reownProjectId: "5a6379b96226b5ab0e93570d0093df16",
   contracts: {
-    daoCore: "ST1G4ZDXED8XM2XJ4Q4GJ7F4PG4EJQ1KKXVPSAX13.dao-core-v3",
+    daoCore: "SP1G4ZDXED8XM2XJ4Q4GJ7F4PG4EJQ1KKXRCD0S3K.dao-core-v3",
   },
 };
 
