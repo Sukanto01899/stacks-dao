@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { isTestnet, networkName } from "@/lib/network";
+import { useWallet } from "@/components/wallet-provider";
 import { formatMicroStx, listDaoProposals } from "@/lib/dao-client";
 
 const explorerBase = isTestnet
@@ -11,6 +12,7 @@ const explorerBase = isTestnet
 const faucetUrl = "https://explorer.hiro.so/faucet?chain=testnet";
 
 export default function Home() {
+  const { address } = useWallet();
   const [proposals, setProposals] = useState<
     Awaited<ReturnType<typeof listDaoProposals>>["proposals"]
   >([]);
@@ -23,7 +25,9 @@ export default function Home() {
       setLoadingProposals(true);
       setProposalError(null);
       try {
-        const { proposals: fetched } = await listDaoProposals();
+        const { proposals: fetched } = await listDaoProposals({
+          voter: address ?? undefined,
+        });
         if (active) {
           setProposals(fetched);
         }
@@ -44,7 +48,7 @@ export default function Home() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [address]);
 
   const shortAddress = (value: string) =>
     value ? `${value.slice(0, 6)}...${value.slice(-4)}` : "—";
@@ -203,9 +207,16 @@ export default function Home() {
                         <p className="text-xs uppercase tracking-[0.3em] text-orange-200/70">
                           Proposal {proposal.id.toString()}
                         </p>
-                        <span className="rounded-full border border-white/10 px-3 py-1 text-[10px] uppercase tracking-[0.25em] text-white/60">
-                          {proposal.status}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          {proposal.voted ? (
+                            <span className="rounded-full border border-emerald-400/40 px-3 py-1 text-[10px] uppercase tracking-[0.25em] text-emerald-200">
+                              Voted
+                            </span>
+                          ) : null}
+                          <span className="rounded-full border border-white/10 px-3 py-1 text-[10px] uppercase tracking-[0.25em] text-white/60">
+                            {proposal.status}
+                          </span>
+                        </div>
                       </div>
                       <h3 className="mt-3 text-lg font-semibold">
                         Treasury transfer
@@ -233,12 +244,18 @@ export default function Home() {
                           Support: {support}% ({formatMicroStx(proposal.forVotes)}
                           )
                         </span>
-                        <Link
-                          href={`/vote?id=${proposal.id.toString()}`}
-                          className="rounded-full border border-white/10 px-3 py-1 text-[10px] uppercase tracking-[0.3em] text-white/70 transition hover:border-white/30"
-                        >
-                          Vote
-                        </Link>
+                        {proposal.voted ? (
+                          <span className="rounded-full border border-white/10 px-3 py-1 text-[10px] uppercase tracking-[0.3em] text-white/40">
+                            Already voted
+                          </span>
+                        ) : (
+                          <Link
+                            href={`/vote?id=${proposal.id.toString()}`}
+                            className="rounded-full border border-white/10 px-3 py-1 text-[10px] uppercase tracking-[0.3em] text-white/70 transition hover:border-white/30"
+                          >
+                            Vote
+                          </Link>
+                        )}
                       </div>
                     </div>
                   );

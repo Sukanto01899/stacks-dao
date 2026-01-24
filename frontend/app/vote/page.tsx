@@ -46,7 +46,9 @@ function VotePageContent() {
       setLoadingProposals(true);
       setProposalError(null);
       try {
-        const { proposals: fetched } = await listDaoProposals();
+        const { proposals: fetched } = await listDaoProposals({
+          voter: address ?? undefined,
+        });
         if (active) {
           setProposals(fetched);
         }
@@ -67,7 +69,11 @@ function VotePageContent() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [address]);
+
+  const selectedProposal = proposals.find(
+    (proposal) => proposal.id.toString() === proposalId
+  );
 
   const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -171,9 +177,16 @@ function VotePageContent() {
                         : "border-white/10 bg-white/5 text-white/60 hover:border-white/30"
                     }`}
                   >
-                    <span className="block text-[10px] uppercase tracking-[0.2em] text-white/50">
-                      Proposal {proposal.id.toString()}
-                    </span>
+                    <div className="flex items-center justify-between">
+                      <span className="block text-[10px] uppercase tracking-[0.2em] text-white/50">
+                        Proposal {proposal.id.toString()}
+                      </span>
+                      {proposal.voted ? (
+                        <span className="rounded-full border border-emerald-400/40 px-2 py-0.5 text-[9px] uppercase tracking-[0.2em] text-emerald-200">
+                          Voted
+                        </span>
+                      ) : null}
+                    </div>
                     <span className="mt-2 block text-sm text-white/80">
                       {formatMicroStx(proposal.amount)}
                     </span>
@@ -224,12 +237,18 @@ function VotePageContent() {
             </div>
             <button
               type="submit"
-              disabled={submitting}
+              disabled={submitting || selectedProposal?.voted}
               className="rounded-2xl bg-orange-500/90 px-4 py-3 text-center text-sm font-semibold text-black transition hover:bg-orange-400 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {submitting ? "Submitting..." : "Submit vote"}
             </button>
           </form>
+
+          {selectedProposal?.voted ? (
+            <p className="mt-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
+              You already voted on this proposal.
+            </p>
+          ) : null}
 
           {error ? (
             <p className="mt-4 rounded-2xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">

@@ -21,6 +21,8 @@ export type DaoProposal = {
   executed: boolean;
   status: "Voting" | "Ready" | "Executed" | "Pending";
   remainingBlocks: bigint;
+  voted?: boolean;
+  voteChoice?: "for" | "against";
 };
 
 const apiBase = isTestnet
@@ -52,6 +54,14 @@ const toBigInt = (value: unknown) => {
   if (typeof value === "number") return BigInt(value);
   if (typeof value === "string") return BigInt(value);
   return 0n;
+};
+
+const principalFromString = (value: string) => {
+  if (value.includes(".")) {
+    const [address, name] = value.split(".");
+    return Cl.contractPrincipal(address, name);
+  }
+  return Cl.standardPrincipal(value);
 };
 
 export const formatMicroStx = (value: bigint) => {
@@ -136,7 +146,56 @@ const getProposalById = async (
   };
 };
 
-export const listDaoProposals = async () => {
+const getReceiptById = async (
+  address: string,
+  name: string,
+  proposalId: bigint,
+  voter: string
+) => {
+  const key = Cl.tuple({
+    id: Cl.uint(proposalId),
+    voter: principalFromString(voter),
+  });
+  const keyHex = `0x${serializeCV(key)}`;
+  const response = await fetch(
+    `${apiBase}/v2/map_entry/${address}/${name}/receipts?proof=0`,
+    {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(keyHex),
+    }
+  );
+  if (!response.ok) {
+    return null;
+  }
+  const json = (await response.json()) as { data?: string };
+  if (!json.data) {
+    return null;
+  }
+  const cv = deserializeCV(json.data);
+  const unwrapped = unwrapOptional(cv);
+  if (!unwrapped) return null;
+  const tupleJson = cvToValue(
+    unwrapped as ClarityValue,
+    true
+  ) as Record<string, unknown>;
+  const tuple = Object.fromEntries(
+    Object.entries(tupleJson).map(([key, value]) => [
+      key,
+      unwrapJsonValue(value),
+    ])
+  );
+  const choice = toBigInt(tuple.choice);
+  return {
+    choice,
+    weight: toBigInt(tuple.weight),
+  };
+};
+
+export const listDaoProposals = async (options?: { voter?: string }) => {
   const parts = getDaoContractParts();
   if (!parts || !daoContractId) {
     return { proposals: [], tipHeight: 0n };
@@ -164,10 +223,21 @@ export const listDaoProposals = async () => {
     } else if (tipHeight <= entry.endHeight) {
       status = "Voting";
     }
+    const receipt = options?.voter
+      ? await getReceiptById(parts.address, parts.name, id, options.voter)
+      : null;
+
     proposals.push({
       ...entry,
       status,
       remainingBlocks,
+      voted: Boolean(receipt),
+      voteChoice:
+        receipt?.choice === 1n
+          ? "for"
+          : receipt
+            ? "against"
+            : undefined,
     });
   }
 
