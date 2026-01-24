@@ -11,10 +11,9 @@ Stacks DAO is a lightweight governance app for proposing and voting on treasury 
 
 ## How it works
 - `dao-core-v3` stores proposals and votes on-chain.
-- `propose` writes a proposal payload after checking governance token power.
-- `cast-vote` records a vote (for/against/abstain) weighted by current token balance.
-- Proposals queue and execute through a timelocked transfer adapter + treasury.
-- FT transfers are limited to the governance token contract for now.
+- `propose` creates a simple STX transfer proposal (recipient + amount).
+- `cast-vote` records a vote (for/against) weighted by current STX balance.
+- `execute` transfers STX after voting ends and quorum passes.
 - The UI reads proposals from the contract map via Hiro API and shows live status.
 - Voting/creation call the contract using Stacks Connect.
 
@@ -60,5 +59,5 @@ Open `http://localhost:3000`.
 
 ## Notes
 - Proposal ids are sequential (`next-proposal-id`).
-- Voting is open for 2,100 blocks from proposal creation, with a 100-block timelock after queue.
+- Voting is open for 1,440 blocks from proposal creation.
 - A proposal must exist before it can be voted on; otherwise `(err u100)` is returned.

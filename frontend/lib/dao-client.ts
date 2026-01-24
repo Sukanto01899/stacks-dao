@@ -72,11 +72,20 @@ const toBigInt = (value: unknown) => {
 };
 
 const principalFromString = (value: string) => {
-  if (value.includes(".")) {
-    const [address, name] = value.split(".");
-    return Cl.contractPrincipal(address, name);
+  const trimmed = value.trim();
+  if (!trimmed || (!trimmed.startsWith("S") && !trimmed.startsWith("T"))) {
+    return null;
   }
-  return Cl.standardPrincipal(value);
+  try {
+    if (trimmed.includes(".")) {
+      const [address, name] = trimmed.split(".");
+      if (!address || !name) return null;
+      return Cl.contractPrincipal(address, name);
+    }
+    return Cl.standardPrincipal(trimmed);
+  } catch {
+    return null;
+  }
 };
 
 export const formatMicroStx = (value: bigint) => {
@@ -190,9 +199,11 @@ const getReceiptById = async (
   proposalId: bigint,
   voter: string
 ) => {
+  const principal = principalFromString(voter);
+  if (!principal) return null;
   const key = Cl.tuple({
     id: Cl.uint(proposalId),
-    voter: principalFromString(voter),
+    voter: principal,
   });
   const keyHex = `0x${serializeCV(key)}`;
   const response = await fetch(

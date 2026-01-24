@@ -63,7 +63,7 @@ export default function Home() {
     { label: "Treasury balance", value: "1.84M STX" },
     { label: "Active proposals", value: String(activeProposals) },
     { label: "Voters this epoch", value: "412" },
-    { label: "Quorum target", value: "10% supply" },
+    { label: "Quorum target", value: "1 STX" },
   ];
 
   return (
@@ -88,14 +88,14 @@ export default function Home() {
               Stacks DAO
             </p>
             <h1 className="font-serif text-4xl leading-tight text-white sm:text-5xl lg:text-6xl">
-              Vote with your DAO.
+              Vote with your STX.
               <br />
               Move the treasury forward.
             </h1>
             <p className="max-w-xl text-base text-white/70 sm:text-lg">
               A lightweight governance portal for treasury proposals, weighted
-              by governance token balance. Connect your wallet, back the best
-              ideas, and ship on-chain transfers when quorum hits.
+              by STX balance. Connect your wallet, back the best ideas, and ship
+              on-chain transfers when quorum hits.
             </p>
             <div className="flex flex-wrap items-center gap-4">
               <Link
@@ -299,7 +299,7 @@ export default function Home() {
                 </Link>
               </div>
               <p className="mt-3 text-xs text-white/50">
-                Requires governance token balance to propose.
+                Requires at least 1 STX to propose.
               </p>
             </div>
 
@@ -341,16 +341,15 @@ export default function Home() {
               From proposal to execution
             </h3>
             <p className="mt-3 max-w-xl text-sm text-white/60">
-              Proposals open for 2,100 blocks. Votes are weighted by governance
-              token balance, and execution happens after queue + timelock once
-              quorum is reached and voting closes. Keep an eye on the window to
-              execute transfers on time.
+              Proposals open for 1,440 blocks. Votes are weighted by live STX
+              balance, and execution happens once quorum is reached and voting
+              closes. Keep an eye on the window to execute transfers on time.
             </p>
             <div className="mt-6 grid gap-3 sm:grid-cols-3">
               {[
-                "Propose with governance tokens",
+                "Propose with 1 STX",
                 "Vote once per proposal",
-                "Queue, then execute after timelock",
+                "Execute after voting closes",
               ].map((step) => (
                 <div
                   key={step}

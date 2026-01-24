@@ -141,8 +141,8 @@ function VotePageContent() {
             Cast your DAO vote
           </h1>
           <p className="mt-2 text-sm text-white/60">
-            Vote on {networkName} proposals. Votes are weighted by your
-            governance token balance.
+            Vote on {networkName} proposals. Votes are weighted by your current
+            STX balance.
           </p>
 
           <div className="mt-6">
