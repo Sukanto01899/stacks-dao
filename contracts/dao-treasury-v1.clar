@@ -4,6 +4,7 @@
 (define-constant ERR_TRANSFER_FAILED u102)
 
 (define-constant TRANSFER_ADAPTER .transfer-adapter-v1)
+(define-constant GOVERNANCE_TOKEN .governance-token-v1)
 
 (define-private (is-authorized-adapter)
   (is-eq contract-caller TRANSFER_ADAPTER)
@@ -20,13 +21,12 @@
 )
 
 (define-public (execute-ft-transfer
-    (token principal)
     (amount uint)
     (recipient principal)
     (memo (optional (buff 34)))
   )
   (if (is-authorized-adapter)
-    (match (as-contract (contract-call? token transfer amount tx-sender recipient memo))
+    (match (as-contract (contract-call? GOVERNANCE_TOKEN transfer amount tx-sender recipient memo))
       ok-result (ok true)
       err-code (err ERR_TRANSFER_FAILED)
     )

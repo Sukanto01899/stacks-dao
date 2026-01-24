@@ -16,6 +16,7 @@
 (define-constant ERR_INVALID_ADAPTER u113)
 (define-constant ERR_HASH_MISMATCH u114)
 (define-constant ERR_TOKEN_CALL u115)
+(define-constant ERR_INVALID_CHOICE u116)
 
 (define-constant CHOICE_AGAINST u0)
 (define-constant CHOICE_FOR u1)
@@ -80,11 +81,11 @@
 )
 
 (define-private (get-token-balance (owner principal))
-  (unwrap! (contract-call? GOVERNANCE_TOKEN get-balance owner) (err ERR_TOKEN_CALL))
+  (contract-call? GOVERNANCE_TOKEN get-balance owner)
 )
 
 (define-private (get-total-supply)
-  (unwrap! (contract-call? GOVERNANCE_TOKEN get-total-supply) (err ERR_TOKEN_CALL))
+  (contract-call? GOVERNANCE_TOKEN get-total-supply)
 )
 
 (define-private (payload-hash (payload (tuple
@@ -108,7 +109,9 @@
     (and (> amount u0)
       (or
         (and (is-eq (get kind payload) "stx-transfer") (is-none (get token payload)))
-        (and (is-eq (get kind payload) "ft-transfer") (is-some (get token payload)))
+        (and (is-eq (get kind payload) "ft-transfer")
+          (and (is-some (get token payload)) (is-eq (unwrap-panic (get token payload)) GOVERNANCE_TOKEN))
+        )
       )
     )
   )
@@ -174,10 +177,10 @@
   )
   (let (
       (pid (var-get next-proposal-id))
-      (supply (get-total-supply))
+      (supply (unwrap! (get-total-supply) (err ERR_TOKEN_CALL)))
       (threshold (max-u MIN_PROPOSAL_THRESHOLD (/ (* supply PROPOSAL_THRESHOLD_BPS) BPS_DENOMINATOR)))
       (quorum (max-u MIN_QUORUM (/ (* supply QUORUM_BPS) BPS_DENOMINATOR)))
-      (power (get-token-balance tx-sender))
+      (power (unwrap! (get-token-balance tx-sender) (err ERR_TOKEN_CALL)))
     )
     (if (< power threshold)
       (err ERR_INSUFFICIENT_POWER)
@@ -232,40 +235,43 @@
       (err ERR_VOTING_CLOSED)
       (if (is-some (map-get? receipts { id: proposal-id, voter: tx-sender }))
         (err ERR_ALREADY_VOTED)
-        (let (
-            (weight (get-token-balance tx-sender))
-            (for-delta (if (is-eq choice CHOICE_FOR) weight u0))
-            (against-delta (if (is-eq choice CHOICE_AGAINST) weight u0))
-            (abstain-delta (if (is-eq choice CHOICE_ABSTAIN) weight u0))
+        (if (or (is-eq choice CHOICE_FOR) (is-eq choice CHOICE_AGAINST) (is-eq choice CHOICE_ABSTAIN))
+          (let (
+            (weight (unwrap! (get-token-balance tx-sender) (err ERR_TOKEN_CALL)))
+              (for-delta (if (is-eq choice CHOICE_FOR) weight u0))
+              (against-delta (if (is-eq choice CHOICE_AGAINST) weight u0))
+              (abstain-delta (if (is-eq choice CHOICE_ABSTAIN) weight u0))
+            )
+            (map-set receipts { id: proposal-id, voter: tx-sender } { choice: choice, weight: weight })
+            (map-set proposals { id: proposal-id } {
+              proposer: (get proposer proposal),
+              adapter: (get adapter proposal),
+              adapter-hash: (get adapter-hash proposal),
+              payload-hash: (get payload-hash proposal),
+              payload: (get payload proposal),
+              start-height: (get start-height proposal),
+              end-height: (get end-height proposal),
+              eta: (get eta proposal),
+              for-votes: (+ (get for-votes proposal) for-delta),
+              against-votes: (+ (get against-votes proposal) against-delta),
+              abstain-votes: (+ (get abstain-votes proposal) abstain-delta),
+              queued: (get queued proposal),
+              executed: (get executed proposal),
+              cancelled: (get cancelled proposal),
+              snapshot-supply: (get snapshot-supply proposal),
+              quorum: (get quorum proposal),
+              threshold: (get threshold proposal),
+            })
+            (print {
+              event: "vote",
+              id: proposal-id,
+              voter: tx-sender,
+              choice: choice,
+              weight: weight,
+            })
+            (ok true)
           )
-          (map-set receipts { id: proposal-id, voter: tx-sender } { choice: choice, weight: weight })
-          (map-set proposals { id: proposal-id } {
-            proposer: (get proposer proposal),
-            adapter: (get adapter proposal),
-            adapter-hash: (get adapter-hash proposal),
-            payload-hash: (get payload-hash proposal),
-            payload: (get payload proposal),
-            start-height: (get start-height proposal),
-            end-height: (get end-height proposal),
-            eta: (get eta proposal),
-            for-votes: (+ (get for-votes proposal) for-delta),
-            against-votes: (+ (get against-votes proposal) against-delta),
-            abstain-votes: (+ (get abstain-votes proposal) abstain-delta),
-            queued: (get queued proposal),
-            executed: (get executed proposal),
-            cancelled: (get cancelled proposal),
-            snapshot-supply: (get snapshot-supply proposal),
-            quorum: (get quorum proposal),
-            threshold: (get threshold proposal),
-          })
-          (print {
-            event: "vote",
-            id: proposal-id,
-            voter: tx-sender,
-            choice: choice,
-            weight: weight,
-          })
-          (ok true)
+          (err ERR_INVALID_CHOICE)
         )
       )
     )
@@ -377,7 +383,7 @@
   (let ((proposal (unwrap! (map-get? proposals { id: proposal-id }) (err ERR_PROPOSAL_MISSING))))
     (if (or (get executed proposal) (get cancelled proposal))
       (err ERR_ALREADY_CANCELLED)
-      (let ((power (get-token-balance tx-sender)))
+      (let ((power (unwrap! (get-token-balance tx-sender) (err ERR_TOKEN_CALL))))
         (if (or (is-eq tx-sender (get proposer proposal)) (>= power (get threshold proposal)))
           (begin
             (map-set proposals { id: proposal-id } {

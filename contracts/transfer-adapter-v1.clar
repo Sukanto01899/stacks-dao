@@ -1,6 +1,6 @@
 ;; Adapter that executes treasury transfers for DAO proposals.
 
-(impl-trait .traits.dao-adapter-trait)
+(impl-trait .dao-adapter-trait.dao-adapter-trait)
 
 (define-constant ERR_UNAUTHORIZED u100)
 (define-constant ERR_INVALID_PAYLOAD u101)
@@ -8,6 +8,7 @@
 
 (define-constant DAO_CORE .dao-core-v3)
 (define-constant DAO_TREASURY .dao-treasury-v1)
+(define-constant GOVERNANCE_TOKEN .governance-token-v1)
 
 (define-private (is-core-caller)
   (is-eq contract-caller DAO_CORE)
@@ -26,7 +27,9 @@
     (and (> amount u0)
       (or
         (and (is-stx-transfer payload) (is-none (get token payload)))
-        (and (is-ft-transfer payload) (is-some (get token payload)))
+        (and (is-ft-transfer payload)
+          (and (is-some (get token payload)) (is-eq (unwrap-panic (get token payload)) GOVERNANCE_TOKEN))
+        )
       )
     )
   )
@@ -40,7 +43,7 @@
           ok-result (ok ok-result)
           err-code (err ERR_TREASURY_FAILED)
         )
-        (match (contract-call? DAO_TREASURY execute-ft-transfer (unwrap-panic (get token payload)) (get amount payload) (get recipient payload) (get memo payload))
+        (match (contract-call? DAO_TREASURY execute-ft-transfer (get amount payload) (get recipient payload) (get memo payload))
           ok-result (ok ok-result)
           err-code (err ERR_TREASURY_FAILED)
         )

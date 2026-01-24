@@ -9,7 +9,7 @@ const voters = Array.from(accounts.values()).slice(0, 10);
 const proposalId = Cl.uint(1);
 const forChoice = Cl.uint(1);
 
-const buildPayload = (to: string, amount = 0) =>
+const buildPayload = (to: string, amount = 1) =>
   Cl.tuple({
     kind: Cl.stringAscii("stx-transfer"),
     amount: Cl.uint(amount),
@@ -18,31 +18,46 @@ const buildPayload = (to: string, amount = 0) =>
     memo: Cl.none(),
   });
 
+const mintTokens = () => {
+  voters.forEach((voter) => {
+    const mint = simnet.callPublicFn(
+      "governance-token-v1",
+      "mint",
+      [Cl.principal(voter), Cl.uint(1)],
+      proposer
+    );
+    expect(mint.result).toBeOk(Cl.bool(true));
+  });
+};
+
 describe("dao-core governance", () => {
+
   it("rejects non stx-transfer payloads", () => {
+    mintTokens();
     const invalid = Cl.tuple({
       kind: Cl.stringAscii("ft-transfer"),
-      amount: Cl.uint(0),
+      amount: Cl.uint(1),
       recipient: Cl.principal(recipient),
       token: Cl.none(),
       memo: Cl.none(),
     });
 
     const proposal = simnet.callPublicFn(
-      "dao-core-v1",
+      "dao-core-v3",
       "propose",
       [invalid],
       proposer
     );
 
-    expect(proposal.result).toBeErr(Cl.uint(115)); // ERR_INVALID_PAYLOAD
+    expect(proposal.result).toBeErr(Cl.uint(107)); // ERR_INVALID_PAYLOAD
   });
 
   it("queues a passing proposal and surfaces execution failures", () => {
-    const payload = buildPayload(recipient, 0);
+    mintTokens();
+    const payload = buildPayload(recipient, 1);
 
     const proposal = simnet.callPublicFn(
-      "dao-core-v1",
+      "dao-core-v3",
       "propose",
       [payload],
       proposer
@@ -51,7 +66,7 @@ describe("dao-core governance", () => {
 
     voters.forEach((voter) => {
       const vote = simnet.callPublicFn(
-        "dao-core-v1",
+        "dao-core-v3",
         "cast-vote",
         [proposalId, forChoice],
         voter
@@ -60,12 +75,12 @@ describe("dao-core governance", () => {
     });
 
     const tally = cvToValue(
-      simnet.getMapEntry("dao-core-v1", "proposals", Cl.tuple({ id: proposalId }))
+      simnet.getMapEntry("dao-core-v3", "proposals", Cl.tuple({ id: proposalId }))
     ) as any;
     expect(BigInt(tally.value["for-votes"].value)).toBe(10n);
 
     const passes = simnet.callReadOnlyFn(
-      "dao-core-v1",
+      "dao-core-v3",
       "proposal-passes",
       [proposalId],
       proposer
@@ -75,7 +90,7 @@ describe("dao-core governance", () => {
     simnet.mineEmptyBlocks(2101);
 
     const queued = simnet.callPublicFn(
-      "dao-core-v1",
+      "dao-core-v3",
       "queue",
       [proposalId],
       proposer
@@ -84,21 +99,26 @@ describe("dao-core governance", () => {
 
     simnet.mineEmptyBlocks(101);
 
-    expect(() =>
-      simnet.callPublicFn("dao-core-v1", "execute", [proposalId], proposer)
-    ).toThrow(/ContractCallExpectName/);
+    const execution = simnet.callPublicFn(
+      "dao-core-v3",
+      "execute",
+      [proposalId],
+      proposer
+    );
+    expect(execution.result).toBeErr(Cl.uint(105)); // ERR_EXECUTION_FAILED
 
     const finalState = cvToValue(
-      simnet.getMapEntry("dao-core-v1", "proposals", Cl.tuple({ id: proposalId }))
+      simnet.getMapEntry("dao-core-v3", "proposals", Cl.tuple({ id: proposalId }))
     ) as any;
     expect(finalState.value.executed.value).toBe(false);
   });
 
   it("allows cancellation of a proposal and blocks further progress", () => {
-    const payload = buildPayload(recipient, 0);
+    mintTokens();
+    const payload = buildPayload(recipient, 1);
 
     const proposal = simnet.callPublicFn(
-      "dao-core-v1",
+      "dao-core-v3",
       "propose",
       [payload],
       proposer
@@ -106,7 +126,7 @@ describe("dao-core governance", () => {
     expect(proposal.result).toBeOk(proposalId);
 
     const cancelled = simnet.callPublicFn(
-      "dao-core-v1",
+      "dao-core-v3",
       "cancel",
       [proposalId],
       recipient
@@ -114,16 +134,16 @@ describe("dao-core governance", () => {
     expect(cancelled.result).toBeOk(Cl.bool(true));
 
     const state = cvToValue(
-      simnet.getMapEntry("dao-core-v1", "proposals", Cl.tuple({ id: proposalId }))
+      simnet.getMapEntry("dao-core-v3", "proposals", Cl.tuple({ id: proposalId }))
     ) as any;
     expect(state.value.cancelled.value).toBe(true);
 
     const queueAttempt = simnet.callPublicFn(
-      "dao-core-v1",
+      "dao-core-v3",
       "queue",
       [proposalId],
       proposer
     );
-    expect(queueAttempt.result).toBeErr(Cl.uint(110)); // ERR_ALREADY_CANCELLED
+    expect(queueAttempt.result).toBeErr(Cl.uint(109)); // ERR_ALREADY_CANCELLED
   });
 });

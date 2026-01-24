@@ -6,10 +6,31 @@ telemetry = false
 cache_dir = './.cache'
 requirements = []
 
-[contracts.dao-core-v1]
-path = 'contracts/dao-core.clar'
+[contracts.dao-core-v3]
+path = 'contracts/dao-core-v3.clar'
 clarity_version = 4
 epoch = '3.3'
+
+[contracts.dao-treasury-v1]
+path = 'contracts/dao-treasury-v1.clar'
+clarity_version = 4
+epoch = '3.3'
+
+[contracts.transfer-adapter-v1]
+path = 'contracts/transfer-adapter-v1.clar'
+clarity_version = 4
+epoch = '3.3'
+
+[contracts.governance-token-v1]
+path = 'contracts/governance-token-v1.clar'
+clarity_version = 4
+epoch = '3.3'
+
+[contracts.dao-adapter-trait]
+path = 'contracts/traits/dao-adapter-trait.clar'
+clarity_version = 4
+epoch = '3.3'
+
 [repl.analysis]
 passes = ['check_checker']
 
