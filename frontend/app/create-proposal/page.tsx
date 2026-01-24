@@ -31,8 +31,8 @@ export default function CreateProposalPage() {
       return;
     }
 
-    if (!getDaoContractParts()) {
-      setError("Missing NEXT_PUBLIC_DAO_CONTRACT in the environment.");
+    if (!daoContractId) {
+      setError("DAO contract is missing from config.");
       return;
     }
 
@@ -92,7 +92,7 @@ export default function CreateProposalPage() {
           </h1>
           <p className="mt-2 text-sm text-white/60">
             Submit a proposal on {networkName} to transfer STX from the DAO
-            treasury. Requires at least 1 STX balance to propose.
+            treasury. Requires governance token balance to propose.
           </p>
 
           <form className="mt-8 grid gap-4" onSubmit={onSubmit}>

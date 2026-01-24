@@ -12,7 +12,11 @@ import {
   getDaoContractParts,
   parseUint,
 } from "@/lib/dao";
-import { formatMicroStx, listDaoProposals } from "@/lib/dao-client";
+import {
+  formatGovernanceToken,
+  formatMicroStx,
+  listDaoProposals,
+} from "@/lib/dao-client";
 
 const choiceMap = {
   for: 1n,
@@ -85,8 +89,8 @@ function VotePageContent() {
       return;
     }
 
-    if (!getDaoContractParts()) {
-      setError("Missing NEXT_PUBLIC_DAO_CONTRACT in the environment.");
+    if (!daoContractId) {
+      setError("DAO contract is missing from config.");
       return;
     }
 
@@ -137,8 +141,8 @@ function VotePageContent() {
             Cast your DAO vote
           </h1>
           <p className="mt-2 text-sm text-white/60">
-            Vote on {networkName} proposals. Votes are weighted by your current
-            STX balance.
+            Vote on {networkName} proposals. Votes are weighted by your
+            governance token balance.
           </p>
 
           <div className="mt-6">
@@ -188,7 +192,9 @@ function VotePageContent() {
                       ) : null}
                     </div>
                     <span className="mt-2 block text-sm text-white/80">
-                      {formatMicroStx(proposal.amount)}
+                      {proposal.kind === "ft-transfer"
+                        ? formatGovernanceToken(proposal.amount)
+                        : formatMicroStx(proposal.amount)}
                     </span>
                     <span className="mt-1 block text-[11px] uppercase tracking-[0.2em] text-white/40">
                       {proposal.status}

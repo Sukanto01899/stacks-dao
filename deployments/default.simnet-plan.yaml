@@ -64,26 +64,6 @@ plan:
     - id: 0
       transactions:
         - emulated-contract-publish:
-            contract-name: dao-adapter-trait
-            emulated-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
-            path: "contracts\\traits\\dao-adapter-trait.clar"
-            clarity-version: 4
-        - emulated-contract-publish:
-            contract-name: governance-token-v1
-            emulated-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
-            path: "contracts\\governance-token-v1.clar"
-            clarity-version: 4
-        - emulated-contract-publish:
-            contract-name: dao-treasury-v1
-            emulated-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
-            path: "contracts\\dao-treasury-v1.clar"
-            clarity-version: 4
-        - emulated-contract-publish:
-            contract-name: transfer-adapter-v1
-            emulated-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
-            path: "contracts\\transfer-adapter-v1.clar"
-            clarity-version: 4
-        - emulated-contract-publish:
             contract-name: dao-core-v3
             emulated-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
             path: "contracts\\dao-core-v3.clar"

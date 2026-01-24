@@ -4,7 +4,11 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { isTestnet, networkName } from "@/lib/network";
 import { useWallet } from "@/components/wallet-provider";
-import { formatMicroStx, listDaoProposals } from "@/lib/dao-client";
+import {
+  formatGovernanceToken,
+  formatMicroStx,
+  listDaoProposals,
+} from "@/lib/dao-client";
 
 const explorerBase = isTestnet
   ? "https://explorer.hiro.so/?chain=testnet"
@@ -59,7 +63,7 @@ export default function Home() {
     { label: "Treasury balance", value: "1.84M STX" },
     { label: "Active proposals", value: String(activeProposals) },
     { label: "Voters this epoch", value: "412" },
-    { label: "Quorum target", value: "1 STX" },
+    { label: "Quorum target", value: "10% supply" },
   ];
 
   return (
@@ -84,14 +88,14 @@ export default function Home() {
               Stacks DAO
             </p>
             <h1 className="font-serif text-4xl leading-tight text-white sm:text-5xl lg:text-6xl">
-              Vote with your STX.
+              Vote with your DAO.
               <br />
               Move the treasury forward.
             </h1>
             <p className="max-w-xl text-base text-white/70 sm:text-lg">
               A lightweight governance portal for treasury proposals, weighted
-              by STX balance. Connect your wallet, back the best ideas, and ship
-              on-chain transfers when quorum hits.
+              by governance token balance. Connect your wallet, back the best
+              ideas, and ship on-chain transfers when quorum hits.
             </p>
             <div className="flex flex-wrap items-center gap-4">
               <Link
@@ -188,13 +192,16 @@ export default function Home() {
                 </div>
               ) : (
                 proposals.map((proposal) => {
-                  const total = proposal.forVotes + proposal.againstVotes;
+                  const total =
+                    proposal.forVotes +
+                    proposal.againstVotes +
+                    proposal.abstainVotes;
                   const support =
                     total > 0n
                       ? Number((proposal.forVotes * 100n) / total)
                       : 0;
                   const endsLabel =
-                    proposal.status === "Voting"
+                    proposal.status === "Voting" || proposal.status === "Queued"
                       ? `${proposal.remainingBlocks} blocks`
                       : proposal.status;
 
@@ -231,7 +238,9 @@ export default function Home() {
                         <div>
                           <p className="uppercase tracking-[0.2em]">Amount</p>
                           <p className="mt-1 text-white/80">
-                            {formatMicroStx(proposal.amount)}
+                            {proposal.kind === "ft-transfer"
+                              ? formatGovernanceToken(proposal.amount)
+                              : formatMicroStx(proposal.amount)}
                           </p>
                         </div>
                         <div>
@@ -241,7 +250,10 @@ export default function Home() {
                       </div>
                       <div className="mt-4 flex items-center justify-between text-xs text-white/60">
                         <span>
-                          Support: {support}% ({formatMicroStx(proposal.forVotes)}
+                          Support: {support}% (
+                          {proposal.kind === "ft-transfer"
+                            ? formatGovernanceToken(proposal.forVotes)
+                            : formatMicroStx(proposal.forVotes)}
                           )
                         </span>
                         {proposal.voted ? (
@@ -287,7 +299,7 @@ export default function Home() {
                 </Link>
               </div>
               <p className="mt-3 text-xs text-white/50">
-                Requires at least 1 STX to propose.
+                Requires governance token balance to propose.
               </p>
             </div>
 
@@ -329,15 +341,16 @@ export default function Home() {
               From proposal to execution
             </h3>
             <p className="mt-3 max-w-xl text-sm text-white/60">
-              Proposals open for 1,440 blocks. Votes are weighted by live STX
-              balance, and execution happens once quorum is reached and voting
-              closes. Keep an eye on the window to execute transfers on time.
+              Proposals open for 2,100 blocks. Votes are weighted by governance
+              token balance, and execution happens after queue + timelock once
+              quorum is reached and voting closes. Keep an eye on the window to
+              execute transfers on time.
             </p>
             <div className="mt-6 grid gap-3 sm:grid-cols-3">
               {[
-                "Propose with 1 STX",
+                "Propose with governance tokens",
                 "Vote once per proposal",
-                "Execute after voting closes",
+                "Queue, then execute after timelock",
               ].map((step) => (
                 <div
                   key={step}

@@ -1,9 +1,24 @@
 import { Cl } from "@stacks/transactions";
 import { isTestnet } from "./network";
+import { appConfig } from "./config";
 
-export const daoContractId = process.env.NEXT_PUBLIC_DAO_CONTRACT ?? "";
+const normalizeContractId = (value: string) => value.trim();
+
+export const daoContractId = normalizeContractId(
+  appConfig.contracts.daoCore ?? ""
+);
+
+export const isValidContractId = (value: string) => {
+  const trimmed = value.trim();
+  if (!trimmed || trimmed.includes(" ")) return false;
+  const parts = trimmed.split(".");
+  if (parts.length !== 2) return false;
+  const [address, name] = parts;
+  return Boolean(address && name);
+};
 
 export const getDaoContractParts = () => {
+  if (!daoContractId || !isValidContractId(daoContractId)) return null;
   const [address, name] = daoContractId.split(".");
   if (!address || !name) return null;
   return { address, name };

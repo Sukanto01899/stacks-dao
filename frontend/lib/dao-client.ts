@@ -14,15 +14,30 @@ export type DaoProposal = {
   proposer: string;
   recipient: string;
   amount: bigint;
+  kind: string;
+  token?: string | null;
   startHeight: bigint;
   endHeight: bigint;
+  eta: bigint;
   forVotes: bigint;
   againstVotes: bigint;
+  abstainVotes: bigint;
+  queued: boolean;
   executed: boolean;
-  status: "Voting" | "Ready" | "Executed" | "Pending";
+  cancelled: boolean;
+  quorum: bigint;
+  threshold: bigint;
+  status:
+    | "Pending"
+    | "Voting"
+    | "Queued"
+    | "Ready"
+    | "Executed"
+    | "Cancelled"
+    | "Failed";
   remainingBlocks: bigint;
   voted?: boolean;
-  voteChoice?: "for" | "against";
+  voteChoice?: "for" | "against" | "abstain";
 };
 
 const apiBase = isTestnet
@@ -69,6 +84,13 @@ export const formatMicroStx = (value: bigint) => {
   const fraction = (value % 1_000_000n).toString().padStart(6, "0");
   const trimmed = fraction.replace(/0+$/, "");
   return trimmed ? `${whole}.${trimmed} STX` : `${whole} STX`;
+};
+
+export const formatGovernanceToken = (value: bigint) => {
+  const whole = value / 1_000_000n;
+  const fraction = (value % 1_000_000n).toString().padStart(6, "0");
+  const trimmed = fraction.replace(/0+$/, "");
+  return trimmed ? `${whole}.${trimmed} DAO` : `${whole} DAO`;
 };
 
 const getTipHeight = async () => {
@@ -133,16 +155,32 @@ const getProposalById = async (
       unwrapJsonValue(value),
     ])
   );
+  const payload = (tuple.payload ?? {}) as Record<string, unknown>;
+  const payloadNormalized = Object.fromEntries(
+    Object.entries(payload).map(([key, value]) => [key, unwrapJsonValue(value)])
+  );
+  const recipient =
+    payloadNormalized.recipient ?? tuple.recipient ?? "";
+  const amount = payloadNormalized.amount ?? tuple.amount ?? 0;
+  const kind = payloadNormalized.kind ?? "stx-transfer";
   return {
     id: proposalId,
     proposer: String(tuple.proposer ?? ""),
-    recipient: String(tuple.recipient ?? ""),
-    amount: toBigInt(tuple.amount),
+    recipient: String(recipient),
+    amount: toBigInt(amount),
+    kind: String(kind),
+    token: payloadNormalized.token ? String(payloadNormalized.token) : null,
     startHeight: toBigInt(tuple["start-height"]),
     endHeight: toBigInt(tuple["end-height"]),
+    eta: tuple.eta ? toBigInt(tuple.eta) : 0n,
     forVotes: toBigInt(tuple["for-votes"]),
     againstVotes: toBigInt(tuple["against-votes"]),
+    abstainVotes: tuple["abstain-votes"] ? toBigInt(tuple["abstain-votes"]) : 0n,
+    queued: Boolean(tuple.queued),
     executed: Boolean(tuple.executed),
+    cancelled: Boolean(tuple.cancelled),
+    quorum: tuple.quorum ? toBigInt(tuple.quorum) : 0n,
+    threshold: tuple.threshold ? toBigInt(tuple.threshold) : 0n,
   };
 };
 
@@ -213,15 +251,32 @@ export const listDaoProposals = async (options?: { voter?: string }) => {
   for (let id = first; id <= last; id += 1n) {
     const entry = await getProposalById(parts.address, parts.name, id);
     if (!entry) continue;
-    const remainingBlocks =
-      tipHeight < entry.endHeight ? entry.endHeight - tipHeight : 0n;
+    const participation =
+      entry.forVotes + entry.againstVotes + entry.abstainVotes;
+    const passed =
+      participation >= entry.quorum && entry.forVotes > entry.againstVotes;
     let status: DaoProposal["status"] = "Ready";
-    if (entry.executed) {
+    let remainingBlocks = 0n;
+
+    if (entry.cancelled) {
+      status = "Cancelled";
+    } else if (entry.executed) {
       status = "Executed";
     } else if (tipHeight < entry.startHeight) {
       status = "Pending";
+      remainingBlocks = entry.startHeight - tipHeight;
     } else if (tipHeight <= entry.endHeight) {
       status = "Voting";
+      remainingBlocks = entry.endHeight - tipHeight;
+    } else if (entry.queued) {
+      if (tipHeight < entry.eta) {
+        status = "Queued";
+        remainingBlocks = entry.eta - tipHeight;
+      } else {
+        status = "Ready";
+      }
+    } else if (!passed) {
+      status = "Failed";
     }
     const receipt = options?.voter
       ? await getReceiptById(parts.address, parts.name, id, options.voter)
@@ -235,9 +290,11 @@ export const listDaoProposals = async (options?: { voter?: string }) => {
       voteChoice:
         receipt?.choice === 1n
           ? "for"
-          : receipt
-            ? "against"
-            : undefined,
+          : receipt?.choice === 2n
+            ? "abstain"
+            : receipt
+              ? "against"
+              : undefined,
     });
   }
 

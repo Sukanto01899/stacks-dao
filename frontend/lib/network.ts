@@ -1,4 +1,5 @@
 import { networkFromName } from "@stacks/network";
+import { appConfig } from "./config";
 
 type StacksNetworkName = "mainnet" | "testnet" | "devnet" | "mocknet";
 
@@ -15,8 +16,6 @@ const normalizeNetworkName = (value: string): StacksNetworkName => {
   return "testnet";
 };
 
-export const networkName = normalizeNetworkName(
-  process.env.NEXT_PUBLIC_STACKS_NETWORK ?? "testnet"
-);
+export const networkName = normalizeNetworkName(appConfig.stacksNetwork);
 export const isTestnet = networkName !== "mainnet";
 export const network = networkFromName(networkName);
