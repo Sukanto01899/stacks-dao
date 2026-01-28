@@ -10,7 +10,7 @@ plan:
       transactions:
         - contract-publish:
             contract-name: dao-core-v3
-            expected-sender: ST1G4ZDXED8XM2XJ4Q4GJ7F4PG4EJQ1KKXVPSAX13
+            expected-sender: ST1K2XGT5RNGT42N49BH936VDF8NXWNZJY0N432CM
             cost: 47070
             path: "contracts\\dao-core-v3.clar"
             anchor-block-only: true
