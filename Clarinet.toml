@@ -6,10 +6,6 @@ telemetry = false
 cache_dir = './.cache'
 requirements = []
 
-[contracts.dao-core-v3]
-path = 'contracts/dao-core-v3.clar'
-clarity_version = 4
-epoch = '3.3'
 
 [contracts.dao-core-v4]
 path = 'contracts/dao-core-v4.clar'

@@ -9,10 +9,10 @@ plan:
     - id: 0
       transactions:
         - contract-publish:
-            contract-name: dao-core-v3
+            contract-name: dao-core-v4
             expected-sender: ST1K2XGT5RNGT42N49BH936VDF8NXWNZJY0N432CM
-            cost: 47070
-            path: "contracts\\dao-core-v3.clar"
+            cost: 75080
+            path: "contracts\\dao-core-v4.clar"
             anchor-block-only: true
             clarity-version: 4
       epoch: "3.3"

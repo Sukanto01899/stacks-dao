@@ -64,8 +64,8 @@ plan:
     - id: 0
       transactions:
         - emulated-contract-publish:
-            contract-name: dao-core-v3
+            contract-name: dao-core-v4
             emulated-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
-            path: "contracts\\dao-core-v3.clar"
+            path: "contracts\\dao-core-v4.clar"
             clarity-version: 4
       epoch: "3.3"

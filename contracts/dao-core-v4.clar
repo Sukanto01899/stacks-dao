@@ -180,8 +180,14 @@
           (err ERR_ALREADY_VOTED)
           (let (
               (weight (get-locked tx-sender))
-              (for-delta (if (is-eq choice CHOICE_FOR) weight u0))
-              (against-delta (if (is-eq choice CHOICE_AGAINST) weight u0))
+              (for-delta (if (is-eq choice CHOICE_FOR)
+                weight
+                u0
+              ))
+              (against-delta (if (is-eq choice CHOICE_AGAINST)
+                weight
+                u0
+              ))
             )
             (map-set receipts {
               id: proposal-id,
@@ -220,7 +226,9 @@
         (if (> stacks-block-height (get execute-before proposal))
           (err ERR_VOTING_CLOSED)
           (if (proposal-passes proposal)
-            (match (as-contract (stx-transfer? (get amount proposal) tx-sender (get recipient proposal)))
+            (match (as-contract (stx-transfer? (get amount proposal) tx-sender
+              (get recipient proposal)
+            ))
               ok-result (begin
                 (map-set proposals { id: proposal-id } {
                   proposer: (get proposer proposal),
