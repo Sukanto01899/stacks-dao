@@ -67,5 +67,5 @@ plan:
             contract-name: dao-core-v5
             emulated-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
             path: "contracts\\dao-core-v5.clar"
-            clarity-version: 4
-      epoch: "3.3"
+            clarity-version: 3
+      epoch: "3.2"

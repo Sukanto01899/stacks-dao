@@ -58,13 +58,13 @@ export default function CreateProposalPage() {
       });
       const tx = response?.txid ?? null;
       if (!tx) {
-        setError("No transaction id returned from wallet.");
+        setError("No transaction id returned from wallet");
       } else {
         setTxid(tx);
       }
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Failed to submit proposal."
+        err instanceof Error ? err.message : "Failed to submit proposal",
       );
     } finally {
       setSubmitting(false);

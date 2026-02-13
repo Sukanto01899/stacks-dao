@@ -6,7 +6,7 @@ import { WalletConnectQrModal } from "@/components/walletconnect-qr-modal";
 
 export const metadata: Metadata = {
   title: "Stacks DAO",
-  description: "Token-governed treasury DAO on Stacks",
+  description: "Token-governed treasury DAO on Stacks chain",
 };
 
 export default function RootLayout({

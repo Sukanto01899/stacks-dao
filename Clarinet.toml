@@ -9,8 +9,8 @@ requirements = []
 
 [contracts.dao-core-v5]
 path = 'contracts/dao-core-v5.clar'
-clarity_version = 4
-epoch = '3.3'
+clarity_version = 3
+epoch = '3.2'
 
 [repl.analysis]
 passes = ['check_checker']

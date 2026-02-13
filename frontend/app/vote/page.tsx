@@ -59,7 +59,7 @@ function VotePageContent() {
       } catch (err) {
         if (active) {
           setProposalError(
-            err instanceof Error ? err.message : "Failed to load proposals."
+            err instanceof Error ? err.message : "Failed to load proposals.",
           );
         }
       } finally {
@@ -76,7 +76,7 @@ function VotePageContent() {
   }, [address]);
 
   const selectedProposal = proposals.find(
-    (proposal) => proposal.id.toString() === proposalId
+    (proposal) => proposal.id.toString() === proposalId,
   );
 
   const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -110,12 +110,12 @@ function VotePageContent() {
       });
       const tx = response?.txid ?? null;
       if (!tx) {
-        setError("No transaction id returned from wallet.");
+        setError("No transaction id returned from wallet");
       } else {
         setTxid(tx);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to cast vote.");
+      setError(err instanceof Error ? err.message : "Failed to cast vote");
     } finally {
       setSubmitting(false);
     }
@@ -137,9 +137,7 @@ function VotePageContent() {
           <p className="text-xs uppercase tracking-[0.35em] text-white/60">
             Vote
           </p>
-          <h1 className="mt-3 text-3xl font-semibold">
-            Cast your DAO vote
-          </h1>
+          <h1 className="mt-3 text-3xl font-semibold">Cast your DAO vote</h1>
           <p className="mt-2 text-sm text-white/60">
             Vote on {networkName} proposals. Votes are weighted by your current
             STX balance.
