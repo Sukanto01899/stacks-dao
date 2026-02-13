@@ -113,14 +113,14 @@ const getTipHeight = async () => {
 
 const getNextProposalId = async (address: string, name: string) => {
   const response = await fetch(
-    `${apiBase}/v2/data_var/${address}/${name}/next-proposal-id?proof=0`
+    `${apiBase}/v2/data_var/${address}/${name}/next-proposal-id?proof=0`,
   );
   if (!response.ok) {
-    throw new Error("Failed to fetch next proposal id.");
+    throw new Error("Failed to fetch next proposal id");
   }
   const json = (await response.json()) as { data?: string };
   if (!json.data) {
-    throw new Error("No data for next proposal id.");
+    throw new Error("No data for next proposal id");
   }
   const cv = deserializeCV(json.data);
   return toBigInt(cvToValue(cv));
@@ -129,7 +129,7 @@ const getNextProposalId = async (address: string, name: string) => {
 const getProposalById = async (
   address: string,
   name: string,
-  proposalId: bigint
+  proposalId: bigint,
 ) => {
   const key = Cl.tuple({ id: Cl.uint(proposalId) });
   const keyHex = `0x${serializeCV(key)}`;
@@ -142,7 +142,7 @@ const getProposalById = async (
         "Content-Type": "application/json",
       },
       body: JSON.stringify(keyHex),
-    }
+    },
   );
   if (!response.ok) {
     throw new Error("Failed to fetch proposal.");
@@ -154,22 +154,24 @@ const getProposalById = async (
   const cv = deserializeCV(json.data);
   const unwrapped = unwrapOptional(cv);
   if (!unwrapped) return null;
-  const tupleJson = cvToValue(
-    unwrapped as ClarityValue,
-    true
-  ) as Record<string, unknown>;
+  const tupleJson = cvToValue(unwrapped as ClarityValue, true) as Record<
+    string,
+    unknown
+  >;
   const tuple = Object.fromEntries(
     Object.entries(tupleJson).map(([key, value]) => [
       key,
       unwrapJsonValue(value),
-    ])
+    ]),
   );
   const payload = (tuple.payload ?? {}) as Record<string, unknown>;
   const payloadNormalized = Object.fromEntries(
-    Object.entries(payload).map(([key, value]) => [key, unwrapJsonValue(value)])
+    Object.entries(payload).map(([key, value]) => [
+      key,
+      unwrapJsonValue(value),
+    ]),
   );
-  const recipient =
-    payloadNormalized.recipient ?? tuple.recipient ?? "";
+  const recipient = payloadNormalized.recipient ?? tuple.recipient ?? "";
   const amount = payloadNormalized.amount ?? tuple.amount ?? 0;
   const kind = payloadNormalized.kind ?? "stx-transfer";
   return {
@@ -184,7 +186,9 @@ const getProposalById = async (
     eta: tuple.eta ? toBigInt(tuple.eta) : 0n,
     forVotes: toBigInt(tuple["for-votes"]),
     againstVotes: toBigInt(tuple["against-votes"]),
-    abstainVotes: tuple["abstain-votes"] ? toBigInt(tuple["abstain-votes"]) : 0n,
+    abstainVotes: tuple["abstain-votes"]
+      ? toBigInt(tuple["abstain-votes"])
+      : 0n,
     queued: Boolean(tuple.queued),
     executed: Boolean(tuple.executed),
     cancelled: Boolean(tuple.cancelled),
@@ -197,7 +201,7 @@ const getReceiptById = async (
   address: string,
   name: string,
   proposalId: bigint,
-  voter: string
+  voter: string,
 ) => {
   const principal = principalFromString(voter);
   if (!principal) return null;
@@ -215,7 +219,7 @@ const getReceiptById = async (
         "Content-Type": "application/json",
       },
       body: JSON.stringify(keyHex),
-    }
+    },
   );
   if (!response.ok) {
     return null;
@@ -227,15 +231,15 @@ const getReceiptById = async (
   const cv = deserializeCV(json.data);
   const unwrapped = unwrapOptional(cv);
   if (!unwrapped) return null;
-  const tupleJson = cvToValue(
-    unwrapped as ClarityValue,
-    true
-  ) as Record<string, unknown>;
+  const tupleJson = cvToValue(unwrapped as ClarityValue, true) as Record<
+    string,
+    unknown
+  >;
   const tuple = Object.fromEntries(
     Object.entries(tupleJson).map(([key, value]) => [
       key,
       unwrapJsonValue(value),
-    ])
+    ]),
   );
   const choice = toBigInt(tuple.choice);
   return {
