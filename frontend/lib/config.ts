@@ -10,7 +10,7 @@ const normalizeDaoCoreContract = (value: string) => {
 const daoContractFromEnv =
   process.env.NEXT_PUBLIC_DAO_CONTRACT_V6 ??
   process.env.NEXT_PUBLIC_DAO_CONTRACT ??
-  "SP1G4ZDXED8XM2XJ4Q4GJ7F4PG4EJQ1KKXRCD0S3K.dao-core-v6";
+  "SP1K2XGT5RNGT42N49BH936VDF8NXWNZJY15BPV4F.dao-core-v6";
 
 export const appConfig = {
   stacksNetwork: process.env.NEXT_PUBLIC_STACKS_NETWORK ?? "mainnet",
