@@ -27,6 +27,8 @@ export type DaoProposal = {
   cancelled: boolean;
   quorum: bigint;
   threshold: bigint;
+  executeAfter: bigint;
+  executeBefore: bigint;
   status:
     | "Pending"
     | "Voting"
@@ -43,6 +45,7 @@ export type DaoProposal = {
 const apiBase = isTestnet
   ? "https://api.testnet.hiro.so"
   : "https://api.hiro.so";
+const defaultMinQuorum = 1_000_000n;
 
 const unwrapOptional = (value: unknown) => {
   if (!value || typeof value !== "object") return null;
@@ -192,8 +195,10 @@ const getProposalById = async (
     queued: Boolean(tuple.queued),
     executed: Boolean(tuple.executed),
     cancelled: Boolean(tuple.cancelled),
-    quorum: tuple.quorum ? toBigInt(tuple.quorum) : 0n,
+    quorum: tuple.quorum ? toBigInt(tuple.quorum) : defaultMinQuorum,
     threshold: tuple.threshold ? toBigInt(tuple.threshold) : 0n,
+    executeAfter: tuple["execute-after"] ? toBigInt(tuple["execute-after"]) : 0n,
+    executeBefore: tuple["execute-before"] ? toBigInt(tuple["execute-before"]) : 0n,
   };
 };
 
@@ -283,15 +288,16 @@ export const listDaoProposals = async (options?: { voter?: string }) => {
     } else if (tipHeight <= entry.endHeight) {
       status = "Voting";
       remainingBlocks = entry.endHeight - tipHeight;
-    } else if (entry.queued) {
-      if (tipHeight < entry.eta) {
-        status = "Queued";
-        remainingBlocks = entry.eta - tipHeight;
-      } else {
-        status = "Ready";
-      }
     } else if (!passed) {
       status = "Failed";
+    } else if (tipHeight < entry.executeAfter) {
+      status = "Queued";
+      remainingBlocks = entry.executeAfter - tipHeight;
+    } else if (entry.executeBefore > 0n && tipHeight > entry.executeBefore) {
+      status = "Failed";
+    } else if (entry.queued && tipHeight < entry.eta) {
+      status = "Queued";
+      remainingBlocks = entry.eta - tipHeight;
     }
     const receipt = options?.voter
       ? await getReceiptById(parts.address, parts.name, id, options.voter)

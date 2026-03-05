@@ -10,9 +10,9 @@ Stacks DAO is a lightweight governance app for proposing and voting on treasury 
 - Data: Hiro API (testnet/mainnet)
 
 ## How it works
-- `dao-core-v3` stores proposals and votes on-chain.
+- `dao-core-v6` stores proposals and votes on-chain.
 - `propose` creates a simple STX transfer proposal (recipient + amount).
-- `cast-vote` records a vote (for/against) weighted by current STX balance.
+- `cast-vote` records a vote (for/against) weighted by locked STX balance.
 - `execute` transfers STX after voting ends and quorum passes.
 - The UI reads proposals from the contract map via Hiro API and shows live status.
 - Voting/creation call the contract using Stacks Connect.
@@ -34,7 +34,7 @@ cd frontend && npm install
 ```bash
 NEXT_PUBLIC_STACKS_NETWORK=mainnet
 NEXT_PUBLIC_APP_URL="http://localhost:3000"
-NEXT_PUBLIC_DAO_CONTRACT="SP1G4ZDXED8XM2XJ4Q4GJ7F4PG4EJQ1K.dao-core-v3"
+NEXT_PUBLIC_DAO_CONTRACT="SP1G4ZDXED8XM2XJ4Q4GJ7F4PG4EJQ1K.dao-core-v6"
 # Optional: enable WalletConnect SDK (Stacks)
 NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID="your-project-id"
 ```
@@ -55,7 +55,7 @@ Open `http://localhost:3000`.
 - Vote from `/vote` or the homepage proposal list.
 
 ## Mainnet contract
-- DAO contract: `SP1G4ZDXED8XM2XJ4Q4GJ7F4PG4EJQ1K.dao-core-v3`
+- DAO contract: `SP1G4ZDXED8XM2XJ4Q4GJ7F4PG4EJQ1K.dao-core-v6`
 
 ## Notes
 - Proposal ids are sequential (`next-proposal-id`).
