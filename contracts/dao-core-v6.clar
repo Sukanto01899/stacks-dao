@@ -1,4 +1,4 @@
-;; Simple DAO core v4 (testing-only): locked-STX snapshot voting, treasury execution, and timelock.
+;; Simple DAO core v6 (testing-only): locked-STX snapshot voting, treasury execution, and timelock.
 
 (define-constant ERR_PROPOSAL_MISSING u100)
 (define-constant ERR_VOTING_CLOSED u101)
