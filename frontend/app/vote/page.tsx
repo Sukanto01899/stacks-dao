@@ -138,8 +138,8 @@ function VotePageContent() {
           </p>
           <h1 className="mt-3 text-3xl font-semibold">Cast your DAO vote</h1>
           <p className="mt-2 text-sm text-white/60">
-            Vote on {networkName} proposals. Votes are weighted by your locked
-            STX balance in the DAO contract.
+            Vote on {networkName} proposals. Votes are weighted by your wallet
+            STX balance.
           </p>
 
           <div className="mt-6">

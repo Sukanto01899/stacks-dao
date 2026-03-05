@@ -7,8 +7,8 @@ cache_dir = './.cache'
 requirements = []
 
 
-[contracts.dao-core-v6]
-path = 'contracts/dao-core-v6.clar'
+[contracts.dao-core-v7]
+path = 'contracts/dao-core-v7.clar'
 clarity_version = 3
 epoch = '3.2'
 

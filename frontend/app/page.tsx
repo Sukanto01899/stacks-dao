@@ -94,7 +94,7 @@ export default function Home() {
             </h1>
             <p className="max-w-xl text-base text-white/70 sm:text-lg">
               A lightweight governance portal for treasury proposals, weighted
-              by locked STX balance. Connect your wallet, back the best ideas,
+              by wallet STX balance. Connect your wallet, back the best ideas,
               and ship on-chain transfers when quorum hits.
             </p>
             <div className="flex flex-wrap items-center gap-4">
@@ -299,7 +299,7 @@ export default function Home() {
                 </Link>
               </div>
               <p className="mt-3 text-xs text-white/50">
-                Requires at least 1 STX locked to propose.
+                No lock required to propose.
               </p>
             </div>
 
@@ -342,13 +342,13 @@ export default function Home() {
             </h3>
             <p className="mt-3 max-w-xl text-sm text-white/60">
               Proposals open for 1,440 blocks. Votes are weighted by STX
-              locked in the DAO, and execution happens once quorum is reached
+              in voter wallets, and execution happens once quorum is reached
               and voting closes. Keep an eye on the window to execute transfers
               on time.
             </p>
             <div className="mt-6 grid gap-3 sm:grid-cols-3">
               {[
-                "Propose with 1 locked STX",
+                "Create proposal freely",
                 "Vote once per proposal",
                 "Execute after voting closes",
               ].map((step) => (

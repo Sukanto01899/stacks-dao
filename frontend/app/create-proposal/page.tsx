@@ -91,7 +91,7 @@ export default function CreateProposalPage() {
           </h1>
           <p className="mt-2 text-sm text-white/60">
             Submit a proposal on {networkName} to transfer STX from the DAO
-            treasury. Requires at least 1 STX locked in the DAO contract.
+            treasury. Anyone can create a proposal (no lock required).
           </p>
 
           <form className="mt-8 grid gap-4" onSubmit={onSubmit}>

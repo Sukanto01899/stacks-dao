@@ -2,15 +2,16 @@ const normalizeDaoCoreContract = (value: string) => {
   const trimmed = value.trim();
   const match = trimmed.match(/^([A-Z0-9]+)\.dao-core-v\d+$/);
   if (match) {
-    return `${match[1]}.dao-core-v6`;
+    return `${match[1]}.dao-core-v7`;
   }
   return trimmed;
 };
 
 const daoContractFromEnv =
+  process.env.NEXT_PUBLIC_DAO_CONTRACT_V7 ??
   process.env.NEXT_PUBLIC_DAO_CONTRACT_V6 ??
   process.env.NEXT_PUBLIC_DAO_CONTRACT ??
-  "SP1K2XGT5RNGT42N49BH936VDF8NXWNZJY15BPV4F.dao-core-v6";
+  "SP1K2XGT5RNGT42N49BH936VDF8NXWNZJY15BPV4F.dao-core-v7";
 
 export const appConfig = {
   stacksNetwork: process.env.NEXT_PUBLIC_STACKS_NETWORK ?? "mainnet",
