@@ -9,10 +9,10 @@ plan:
     - id: 0
       transactions:
         - contract-publish:
-            contract-name: dao-core-v6
+            contract-name: dao-core-v7
             expected-sender: SP1K2XGT5RNGT42N49BH936VDF8NXWNZJY15BPV4F
-            cost: 65820
-            path: "contracts\\dao-core-v6.clar"
+            cost: 76270
+            path: "contracts\\dao-core-v7.clar"
             anchor-block-only: true
             clarity-version: 3
       epoch: "3.2"
