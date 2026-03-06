@@ -240,7 +240,7 @@ function VotePageContent() {
             </div>
             <button
               type="submit"
-              disabled={submitting || selectedProposal?.voted}
+              disabled={submitting}
               className="rounded-2xl bg-orange-500/90 px-4 py-3 text-center text-sm font-semibold text-black transition hover:bg-orange-400 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {submitting ? "Submitting..." : "Submit vote"}
@@ -249,7 +249,7 @@ function VotePageContent() {
 
           {selectedProposal?.voted ? (
             <p className="mt-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
-              You already voted on this proposal.
+              You can vote again on this proposal. Your latest vote replaces your previous one.
             </p>
           ) : null}
 

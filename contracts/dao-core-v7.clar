@@ -186,27 +186,48 @@
       (if (or (is-eq choice CHOICE_FOR) (is-eq choice CHOICE_AGAINST))
         (let (
             (weight (get-voting-power tx-sender))
-            (for-delta (if (is-eq choice CHOICE_FOR) weight u0))
-            (against-delta (if (is-eq choice CHOICE_AGAINST) weight u0))
-          )
-          (if (map-insert receipts {
+            (vote-key {
               id: proposal-id,
               voter: tx-sender,
-            } {
-              choice: choice,
-              weight: weight,
             })
+            (new-for (if (is-eq choice CHOICE_FOR) weight u0))
+            (new-against (if (is-eq choice CHOICE_AGAINST) weight u0))
+          )
+          (match (map-get? receipts vote-key)
+            old-receipt
+              (let (
+                  (old-choice (get choice old-receipt))
+                  (old-weight (get weight old-receipt))
+                  (old-for (if (is-eq old-choice CHOICE_FOR) old-weight u0))
+                  (old-against (if (is-eq old-choice CHOICE_AGAINST) old-weight u0))
+                )
+                (map-set receipts vote-key {
+                  choice: choice,
+                  weight: weight,
+                })
+                (map-set proposals
+                  { id: proposal-id }
+                  (merge proposal {
+                    for-votes: (+ (- (get for-votes proposal) old-for) new-for),
+                    against-votes: (+ (- (get against-votes proposal) old-against) new-against),
+                  })
+                )
+                (ok true)
+              )
             (begin
+              (map-set receipts vote-key {
+                choice: choice,
+                weight: weight,
+              })
               (map-set proposals
                 { id: proposal-id }
                 (merge proposal {
-                  for-votes: (+ (get for-votes proposal) for-delta),
-                  against-votes: (+ (get against-votes proposal) against-delta),
+                  for-votes: (+ (get for-votes proposal) new-for),
+                  against-votes: (+ (get against-votes proposal) new-against),
                 })
               )
               (ok true)
             )
-            (err ERR_ALREADY_VOTED)
           )
         )
         (err ERR_INVALID_CHOICE)
