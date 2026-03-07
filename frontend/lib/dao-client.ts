@@ -253,6 +253,81 @@ const getReceiptById = async (
   };
 };
 
+const deriveProposalStatus = (
+  entry: Omit<DaoProposal, "status" | "remainingBlocks">,
+  tipHeight: bigint,
+) => {
+  const participation = entry.forVotes + entry.againstVotes + entry.abstainVotes;
+  const passed = participation >= entry.quorum && entry.forVotes > entry.againstVotes;
+  let status: DaoProposal["status"] = "Ready";
+  let remainingBlocks = 0n;
+
+  if (entry.cancelled) {
+    status = "Cancelled";
+  } else if (entry.executed) {
+    status = "Executed";
+  } else if (tipHeight < entry.startHeight) {
+    status = "Pending";
+    remainingBlocks = entry.startHeight - tipHeight;
+  } else if (tipHeight <= entry.endHeight) {
+    status = "Voting";
+    remainingBlocks = entry.endHeight - tipHeight;
+  } else if (!passed) {
+    status = "Failed";
+  } else if (tipHeight < entry.executeAfter) {
+    status = "Queued";
+    remainingBlocks = entry.executeAfter - tipHeight;
+  } else if (entry.executeBefore > 0n && tipHeight > entry.executeBefore) {
+    status = "Failed";
+  } else if (entry.queued && tipHeight < entry.eta) {
+    status = "Queued";
+    remainingBlocks = entry.eta - tipHeight;
+  }
+
+  return { status, remainingBlocks };
+};
+
+export const getDaoProposal = async (
+  proposalId: bigint,
+  options?: { voter?: string },
+) => {
+  const parts = getDaoContractParts();
+  if (!parts || !daoContractId) {
+    return { proposal: null, tipHeight: 0n };
+  }
+
+  const [tipHeight, entry] = await Promise.all([
+    getTipHeight(),
+    getProposalById(parts.address, parts.name, proposalId),
+  ]);
+  if (!entry) {
+    return { proposal: null, tipHeight };
+  }
+
+  const receipt = options?.voter
+    ? await getReceiptById(parts.address, parts.name, proposalId, options.voter)
+    : null;
+  const { status, remainingBlocks } = deriveProposalStatus(entry, tipHeight);
+
+  return {
+    proposal: {
+      ...entry,
+      status,
+      remainingBlocks,
+      voted: Boolean(receipt),
+      voteChoice:
+        receipt?.choice === 1n
+          ? "for"
+          : receipt?.choice === 2n
+            ? "abstain"
+            : receipt
+              ? "against"
+              : undefined,
+    } satisfies DaoProposal,
+    tipHeight,
+  };
+};
+
 export const listDaoProposals = async (options?: { voter?: string }) => {
   const parts = getDaoContractParts();
   if (!parts || !daoContractId) {
@@ -271,34 +346,7 @@ export const listDaoProposals = async (options?: { voter?: string }) => {
   for (let id = first; id <= last; id += 1n) {
     const entry = await getProposalById(parts.address, parts.name, id);
     if (!entry) continue;
-    const participation =
-      entry.forVotes + entry.againstVotes + entry.abstainVotes;
-    const passed =
-      participation >= entry.quorum && entry.forVotes > entry.againstVotes;
-    let status: DaoProposal["status"] = "Ready";
-    let remainingBlocks = 0n;
-
-    if (entry.cancelled) {
-      status = "Cancelled";
-    } else if (entry.executed) {
-      status = "Executed";
-    } else if (tipHeight < entry.startHeight) {
-      status = "Pending";
-      remainingBlocks = entry.startHeight - tipHeight;
-    } else if (tipHeight <= entry.endHeight) {
-      status = "Voting";
-      remainingBlocks = entry.endHeight - tipHeight;
-    } else if (!passed) {
-      status = "Failed";
-    } else if (tipHeight < entry.executeAfter) {
-      status = "Queued";
-      remainingBlocks = entry.executeAfter - tipHeight;
-    } else if (entry.executeBefore > 0n && tipHeight > entry.executeBefore) {
-      status = "Failed";
-    } else if (entry.queued && tipHeight < entry.eta) {
-      status = "Queued";
-      remainingBlocks = entry.eta - tipHeight;
-    }
+    const { status, remainingBlocks } = deriveProposalStatus(entry, tipHeight);
     const receipt = options?.voter
       ? await getReceiptById(parts.address, parts.name, id, options.voter)
       : null;

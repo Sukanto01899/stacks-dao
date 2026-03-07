@@ -166,9 +166,12 @@ export default function Home() {
                   Treasury flight deck
                 </h2>
               </div>
-              <button className="rounded-full border border-white/10 px-4 py-2 text-xs uppercase tracking-[0.35em] text-white/70 transition hover:border-white/30">
+              <Link
+                href="/vote"
+                className="rounded-full border border-white/10 px-4 py-2 text-xs uppercase tracking-[0.35em] text-white/70 transition hover:border-white/30"
+              >
                 View all
-              </button>
+              </Link>
             </div>
             <div className="mt-6 grid gap-4">
               {loadingProposals ? (
@@ -256,18 +259,20 @@ export default function Home() {
                             : formatMicroStx(proposal.forVotes)}
                           )
                         </span>
-                        {proposal.voted ? (
-                          <span className="rounded-full border border-white/10 px-3 py-1 text-[10px] uppercase tracking-[0.3em] text-white/40">
-                            Already voted
-                          </span>
-                        ) : (
+                        <div className="flex items-center gap-2">
+                          <Link
+                            href={`/proposal/${proposal.id.toString()}`}
+                            className="rounded-full border border-white/10 px-3 py-1 text-[10px] uppercase tracking-[0.3em] text-white/70 transition hover:border-white/30"
+                          >
+                            Details
+                          </Link>
                           <Link
                             href={`/vote?id=${proposal.id.toString()}`}
                             className="rounded-full border border-white/10 px-3 py-1 text-[10px] uppercase tracking-[0.3em] text-white/70 transition hover:border-white/30"
                           >
                             Vote
                           </Link>
-                        )}
+                        </div>
                       </div>
                     </div>
                   );
@@ -349,7 +354,7 @@ export default function Home() {
             <div className="mt-6 grid gap-3 sm:grid-cols-3">
               {[
                 "Create proposal freely",
-                "Vote once per proposal",
+                "Re-vote to update choice",
                 "Execute after voting closes",
               ].map((step) => (
                 <div
