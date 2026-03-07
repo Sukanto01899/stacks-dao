@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { Cl } from "@stacks/transactions";
 import { isTestnet, networkName } from "@/lib/network";
 import { useWallet } from "@/components/wallet-provider";
+import { daoContractId, explorerTxUrl } from "@/lib/dao";
 import {
   formatGovernanceToken,
   formatMicroStx,
@@ -16,12 +18,16 @@ const explorerBase = isTestnet
 const faucetUrl = "https://explorer.hiro.so/faucet?chain=testnet";
 
 export default function Home() {
-  const { address } = useWallet();
+  const { address, callContract } = useWallet();
   const [proposals, setProposals] = useState<
     Awaited<ReturnType<typeof listDaoProposals>>["proposals"]
   >([]);
   const [loadingProposals, setLoadingProposals] = useState(true);
   const [proposalError, setProposalError] = useState<string | null>(null);
+  const [refreshTick, setRefreshTick] = useState(0);
+  const [executePendingId, setExecutePendingId] = useState<string | null>(null);
+  const [executeError, setExecuteError] = useState<string | null>(null);
+  const [executeTxid, setExecuteTxid] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -52,13 +58,54 @@ export default function Home() {
     return () => {
       active = false;
     };
-  }, [address]);
+  }, [address, refreshTick]);
 
   const shortAddress = (value: string) =>
     value ? `${value.slice(0, 6)}...${value.slice(-4)}` : "—";
   const activeProposals = proposals.filter(
     (proposal) => proposal.status === "Voting"
   ).length;
+  const readyProposals = proposals.filter((proposal) => proposal.status === "Ready");
+
+  const handleExecute = async (proposalId: bigint) => {
+    setExecuteError(null);
+    setExecuteTxid(null);
+
+    if (!address) {
+      setExecuteError("Connect a Stacks wallet first.");
+      return;
+    }
+
+    if (!daoContractId) {
+      setExecuteError("DAO contract is missing from config.");
+      return;
+    }
+
+    const id = proposalId.toString();
+    setExecutePendingId(id);
+    try {
+      const response = await callContract({
+        contract: daoContractId,
+        functionName: "execute",
+        functionArgs: [Cl.uint(proposalId)],
+        network: networkName,
+      });
+      const txid = response?.txid ?? null;
+      if (!txid) {
+        setExecuteError("No transaction id returned from wallet");
+      } else {
+        setExecuteTxid(txid);
+        setRefreshTick((value) => value + 1);
+      }
+    } catch (err) {
+      setExecuteError(
+        err instanceof Error ? err.message : "Failed to execute proposal."
+      );
+    } finally {
+      setExecutePendingId(null);
+    }
+  };
+
   const stats = [
     { label: "Treasury balance", value: "1.84M STX" },
     { label: "Active proposals", value: String(activeProposals) },
@@ -368,22 +415,64 @@ export default function Home() {
           </div>
           <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
             <p className="text-xs uppercase tracking-[0.3em] text-white/60">
-              Broadcasts
+              Execution Ready
             </p>
-            <h3 className="mt-2 text-2xl font-semibold">Latest updates</h3>
+            <h3 className="mt-2 text-2xl font-semibold">Action queue</h3>
             <div className="mt-4 space-y-4 text-sm text-white/60">
-              <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-                Treasury vote recap is live. Proposal #02 moves to queue in 3
-                hours.
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-                Execution window opens for #01 once votes close. Prepare the
-                transfer signer.
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-                New AppKit flow enables WalletConnect + embedded wallets.
-              </div>
+              {readyProposals.length === 0 ? (
+                <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                  No proposals are ready to execute right now.
+                </div>
+              ) : (
+                readyProposals.slice(0, 5).map((proposal) => (
+                  <div
+                    key={proposal.id.toString()}
+                    className="rounded-2xl border border-white/10 bg-black/20 p-4"
+                  >
+                    <p className="text-xs uppercase tracking-[0.2em] text-white/50">
+                      Proposal {proposal.id.toString()}
+                    </p>
+                    <p className="mt-2 text-white/80">
+                      {formatMicroStx(proposal.amount)} to {shortAddress(proposal.recipient)}
+                    </p>
+                    <div className="mt-3 flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => void handleExecute(proposal.id)}
+                        disabled={executePendingId === proposal.id.toString()}
+                        className="rounded-full bg-orange-500/90 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.25em] text-black transition hover:bg-orange-400 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {executePendingId === proposal.id.toString()
+                          ? "Submitting..."
+                          : "Execute"}
+                      </button>
+                      <Link
+                        href={`/proposal/${proposal.id.toString()}`}
+                        className="rounded-full border border-white/20 px-3 py-1 text-[10px] uppercase tracking-[0.25em] text-white/70 transition hover:border-white/40"
+                      >
+                        Details
+                      </Link>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
+            {executeError ? (
+              <p className="mt-4 rounded-2xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+                {executeError}
+              </p>
+            ) : null}
+            {executeTxid ? (
+              <p className="mt-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
+                Execute submitted.{" "}
+                <Link
+                  href={explorerTxUrl(executeTxid)}
+                  className="underline decoration-emerald-300/60 underline-offset-4"
+                >
+                  View on explorer
+                </Link>
+              </p>
+            ) : null}
           </div>
         </section>
       </div>
