@@ -42,6 +42,16 @@ export type DaoProposal = {
   voteChoice?: "for" | "against" | "abstain";
 };
 
+export type DaoOverview = {
+  proposals: DaoProposal[];
+  treasuryBalance: bigint | null;
+  tipHeight: bigint;
+  proposalCount: number;
+  activeProposalCount: number;
+  readyProposalCount: number;
+  quorumTarget: bigint;
+};
+
 const apiBase = isTestnet
   ? "https://api.testnet.hiro.so"
   : "https://api.hiro.so";
@@ -112,6 +122,19 @@ const getTipHeight = async () => {
   }
   const data = (await response.json()) as { stacks_tip_height: number };
   return BigInt(data.stacks_tip_height);
+};
+
+const getPrincipalStxBalance = async (principal: string) => {
+  const response = await fetch(`${apiBase}/extended/v1/address/${principal}/balances`);
+  if (!response.ok) {
+    throw new Error("Failed to fetch principal balances.");
+  }
+  const data = (await response.json()) as {
+    stx?: {
+      balance?: string;
+    };
+  };
+  return toBigInt(data.stx?.balance ?? "0");
 };
 
 const getNextProposalId = async (address: string, name: string) => {
@@ -371,4 +394,29 @@ export const listDaoProposals = async (options?: { voter?: string }) => {
     proposals: proposals.reverse(),
     tipHeight,
   };
+};
+
+export const getDaoOverview = async (options?: { voter?: string }) => {
+  const { proposals, tipHeight } = await listDaoProposals(options);
+
+  let treasuryBalance: bigint | null = null;
+  if (daoContractId) {
+    try {
+      treasuryBalance = await getPrincipalStxBalance(daoContractId);
+    } catch {
+      treasuryBalance = null;
+    }
+  }
+
+  return {
+    proposals,
+    treasuryBalance,
+    tipHeight,
+    proposalCount: proposals.length,
+    activeProposalCount: proposals.filter((proposal) => proposal.status === "Voting")
+      .length,
+    readyProposalCount: proposals.filter((proposal) => proposal.status === "Ready")
+      .length,
+    quorumTarget: proposals[0]?.quorum ?? defaultMinQuorum,
+  } satisfies DaoOverview;
 };

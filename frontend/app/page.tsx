@@ -7,6 +7,7 @@ import { isTestnet, networkName } from "@/lib/network";
 import { useWallet } from "@/components/wallet-provider";
 import { daoContractId, explorerTxUrl } from "@/lib/dao";
 import {
+  getDaoOverview,
   formatGovernanceToken,
   formatMicroStx,
   listDaoProposals,
@@ -22,6 +23,9 @@ export default function Home() {
   const [proposals, setProposals] = useState<
     Awaited<ReturnType<typeof listDaoProposals>>["proposals"]
   >([]);
+  const [overview, setOverview] = useState<Awaited<ReturnType<typeof getDaoOverview>> | null>(
+    null
+  );
   const [loadingProposals, setLoadingProposals] = useState(true);
   const [proposalError, setProposalError] = useState<string | null>(null);
   const [refreshTick, setRefreshTick] = useState(0);
@@ -35,14 +39,16 @@ export default function Home() {
       setLoadingProposals(true);
       setProposalError(null);
       try {
-        const { proposals: fetched } = await listDaoProposals({
+        const nextOverview = await getDaoOverview({
           voter: address ?? undefined,
         });
         if (active) {
-          setProposals(fetched);
+          setOverview(nextOverview);
+          setProposals(nextOverview.proposals ?? []);
         }
       } catch (err) {
         if (active) {
+          setOverview(null);
           setProposalError(
             err instanceof Error ? err.message : "Failed to load proposals."
           );
@@ -66,6 +72,15 @@ export default function Home() {
     (proposal) => proposal.status === "Voting"
   ).length;
   const readyProposals = proposals.filter((proposal) => proposal.status === "Ready");
+  const statValue = (value: string | null) =>
+    loadingProposals ? "Loading..." : value ?? "Unavailable";
+  const treasuryBalanceLabel =
+    overview?.treasuryBalance !== null && overview?.treasuryBalance !== undefined
+      ? formatMicroStx(overview.treasuryBalance)
+      : null;
+  const quorumTargetLabel = overview
+    ? formatMicroStx(overview.quorumTarget)
+    : null;
 
   const handleExecute = async (proposalId: bigint) => {
     setExecuteError(null);
@@ -107,10 +122,22 @@ export default function Home() {
   };
 
   const stats = [
-    { label: "Treasury balance", value: "1.84M STX" },
-    { label: "Active proposals", value: String(activeProposals) },
-    { label: "Voters this epoch", value: "412" },
-    { label: "Quorum target", value: "1 STX" },
+    {
+      label: "Treasury balance",
+      value: statValue(treasuryBalanceLabel),
+    },
+    {
+      label: "Active proposals",
+      value: statValue(String(overview?.activeProposalCount ?? activeProposals)),
+    },
+    {
+      label: "Ready to execute",
+      value: statValue(String(overview?.readyProposalCount ?? readyProposals.length)),
+    },
+    {
+      label: "Quorum target",
+      value: statValue(quorumTargetLabel),
+    },
   ];
 
   return (
@@ -155,7 +182,7 @@ export default function Home() {
                 {networkName}
               </span>
               <div className="rounded-full border border-white/20 px-4 py-2 text-xs uppercase tracking-[0.35em] text-white/60">
-                Epoch 24
+                Tip {overview?.tipHeight.toString() ?? "--"}
               </div>
             </div>
           </div>
@@ -180,7 +207,10 @@ export default function Home() {
                 </div>
               ))}
             </div>
-            <div className="mt-6 flex flex-wrap items-center gap-3 text-xs text-white/60">
+              <div className="mt-6 flex flex-wrap items-center gap-3 text-xs text-white/60">
+              <span className="rounded-full border border-white/10 px-3 py-2 text-xs text-white/50">
+                Total proposals: {overview?.proposalCount ?? proposals.length}
+              </span>
               <span className="rounded-full border border-white/10 px-3 py-2 text-xs text-white/50">
                 Network: {networkName}
               </span>
