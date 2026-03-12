@@ -9,7 +9,6 @@ const normalizeDaoCoreContract = (value: string) => {
 
 const daoContractFromEnv =
   process.env.NEXT_PUBLIC_DAO_CONTRACT_V7 ??
-  process.env.NEXT_PUBLIC_DAO_CONTRACT_V6 ??
   process.env.NEXT_PUBLIC_DAO_CONTRACT ??
   "SP1K2XGT5RNGT42N49BH936VDF8NXWNZJY15BPV4F.dao-core-v7";
 
@@ -29,3 +28,12 @@ export const appConfig = {
 
 export const hasDaoContractsConfigured = () =>
   Boolean(appConfig.contracts.daoCore);
+
+export const getDaoCoreContract = () => {
+  if (!appConfig.contracts.daoCore) {
+    throw new Error(
+      "DAO Core contract is not configured. Please set NEXT_PUBLIC_DAO_CONTRACT_V7 or NEXT_PUBLIC_DAO_CONTRACT environment variable.",
+    );
+  }
+  return appConfig.contracts.daoCore;
+};
