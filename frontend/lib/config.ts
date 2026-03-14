@@ -12,6 +12,7 @@ const daoContractFromEnv =
   process.env.NEXT_PUBLIC_DAO_CONTRACT ??
   "SP1K2XGT5RNGT42N49BH936VDF8NXWNZJY15BPV4F.dao-core-v7";
 
+// TODO: add more config options as needed, and consider validating them at startup
 export const appConfig = {
   stacksNetwork: process.env.NEXT_PUBLIC_STACKS_NETWORK ?? "mainnet",
   appUrl: process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",

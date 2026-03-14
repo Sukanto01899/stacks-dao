@@ -18,14 +18,15 @@ const explorerBase = isTestnet
   : "https://explorer.hiro.so/";
 const faucetUrl = "https://explorer.hiro.so/faucet?chain=testnet";
 
+// TODO: split into smaller components, and add some skeleton loaders for the async data
 export default function Home() {
   const { address, callContract } = useWallet();
   const [proposals, setProposals] = useState<
     Awaited<ReturnType<typeof listDaoProposals>>["proposals"]
   >([]);
-  const [overview, setOverview] = useState<Awaited<ReturnType<typeof getDaoOverview>> | null>(
-    null
-  );
+  const [overview, setOverview] = useState<Awaited<
+    ReturnType<typeof getDaoOverview>
+  > | null>(null);
   const [loadingProposals, setLoadingProposals] = useState(true);
   const [proposalError, setProposalError] = useState<string | null>(null);
   const [refreshTick, setRefreshTick] = useState(0);
@@ -50,7 +51,7 @@ export default function Home() {
         if (active) {
           setOverview(null);
           setProposalError(
-            err instanceof Error ? err.message : "Failed to load proposals."
+            err instanceof Error ? err.message : "Failed to load proposals.",
           );
         }
       } finally {
@@ -69,13 +70,16 @@ export default function Home() {
   const shortAddress = (value: string) =>
     value ? `${value.slice(0, 6)}...${value.slice(-4)}` : "—";
   const activeProposals = proposals.filter(
-    (proposal) => proposal.status === "Voting"
+    (proposal) => proposal.status === "Voting",
   ).length;
-  const readyProposals = proposals.filter((proposal) => proposal.status === "Ready");
+  const readyProposals = proposals.filter(
+    (proposal) => proposal.status === "Ready",
+  );
   const statValue = (value: string | null) =>
-    loadingProposals ? "Loading..." : value ?? "Unavailable";
+    loadingProposals ? "Loading..." : (value ?? "Unavailable");
   const treasuryBalanceLabel =
-    overview?.treasuryBalance !== null && overview?.treasuryBalance !== undefined
+    overview?.treasuryBalance !== null &&
+    overview?.treasuryBalance !== undefined
       ? formatMicroStx(overview.treasuryBalance)
       : null;
   const quorumTargetLabel = overview
@@ -114,7 +118,7 @@ export default function Home() {
       }
     } catch (err) {
       setExecuteError(
-        err instanceof Error ? err.message : "Failed to execute proposal."
+        err instanceof Error ? err.message : "Failed to execute proposal.",
       );
     } finally {
       setExecutePendingId(null);
@@ -128,11 +132,15 @@ export default function Home() {
     },
     {
       label: "Active proposals",
-      value: statValue(String(overview?.activeProposalCount ?? activeProposals)),
+      value: statValue(
+        String(overview?.activeProposalCount ?? activeProposals),
+      ),
     },
     {
       label: "Ready to execute",
-      value: statValue(String(overview?.readyProposalCount ?? readyProposals.length)),
+      value: statValue(
+        String(overview?.readyProposalCount ?? readyProposals.length),
+      ),
     },
     {
       label: "Quorum target",
@@ -207,7 +215,7 @@ export default function Home() {
                 </div>
               ))}
             </div>
-              <div className="mt-6 flex flex-wrap items-center gap-3 text-xs text-white/60">
+            <div className="mt-6 flex flex-wrap items-center gap-3 text-xs text-white/60">
               <span className="rounded-full border border-white/10 px-3 py-2 text-xs text-white/50">
                 Total proposals: {overview?.proposalCount ?? proposals.length}
               </span>
@@ -277,9 +285,7 @@ export default function Home() {
                     proposal.againstVotes +
                     proposal.abstainVotes;
                   const support =
-                    total > 0n
-                      ? Number((proposal.forVotes * 100n) / total)
-                      : 0;
+                    total > 0n ? Number((proposal.forVotes * 100n) / total) : 0;
                   const endsLabel =
                     proposal.status === "Voting" || proposal.status === "Queued"
                       ? `${proposal.remainingBlocks} blocks`
@@ -310,7 +316,9 @@ export default function Home() {
                       </h3>
                       <div className="mt-4 grid gap-3 text-xs text-white/60 sm:grid-cols-3">
                         <div>
-                          <p className="uppercase tracking-[0.2em]">Recipient</p>
+                          <p className="uppercase tracking-[0.2em]">
+                            Recipient
+                          </p>
                           <p className="mt-1 text-white/80">
                             {shortAddress(proposal.recipient)}
                           </p>
@@ -423,10 +431,10 @@ export default function Home() {
               From proposal to execution
             </h3>
             <p className="mt-3 max-w-xl text-sm text-white/60">
-              Proposals open for 1,440 blocks. Votes are weighted by STX
-              in voter wallets, and execution happens once quorum is reached
-              and voting closes. Keep an eye on the window to execute transfers
-              on time.
+              Proposals open for 1,440 blocks. Votes are weighted by STX in
+              voter wallets, and execution happens once quorum is reached and
+              voting closes. Keep an eye on the window to execute transfers on
+              time.
             </p>
             <div className="mt-6 grid gap-3 sm:grid-cols-3">
               {[
@@ -463,7 +471,8 @@ export default function Home() {
                       Proposal {proposal.id.toString()}
                     </p>
                     <p className="mt-2 text-white/80">
-                      {formatMicroStx(proposal.amount)} to {shortAddress(proposal.recipient)}
+                      {formatMicroStx(proposal.amount)} to{" "}
+                      {shortAddress(proposal.recipient)}
                     </p>
                     <div className="mt-3 flex items-center gap-2">
                       <button
